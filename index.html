@@ -14,12 +14,13 @@
       --cyan: #00d2d3;
       --green: #2ed573;
       --yellow: #ffa502;
+      --purple: #a55eea;
       --text: #f8f9fa;
       --subtext: #8892b0;
       --border: rgba(255,255,255,0.07);
     }
     * { box-sizing: border-box; font-family: 'Assistant', sans-serif; }
-    body { background: var(--bg); color: var(--text); margin: 0; padding: 20px; display: flex; justify-content: center; }
+    body { background: var(--bg); color: var(--text); margin: 0; padding: 16px; display: flex; justify-content: center; }
     .container { width: 100%; max-width: 520px; display: flex; flex-direction: column; gap: 14px; }
     
     header { text-align: center; padding: 6px 0; }
@@ -44,11 +45,18 @@
     button.secondary { background: #232a45; border: 1px solid var(--cyan); color: var(--cyan); width: 100%; margin-top: 8px; }
     button.sm { padding: 6px 10px; font-size: 0.8rem; }
 
-    .recipe-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.04); font-size: 0.85rem; }
+    /* תגמולים */
+    .reward-item { display: flex; flex-direction: column; gap: 4px; background: rgba(255,255,255,0.02); padding: 10px 12px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 8px; transition: all 0.2s; }
+    .reward-item.unlocked { border-color: var(--green); background: rgba(46,213,115,0.06); }
+    .reward-header { display: flex; justify-content: space-between; align-items: center; }
+    .reward-weight { font-weight: 800; color: var(--yellow); font-size: 0.9rem; }
+    .reward-item.unlocked .reward-weight { color: var(--green); }
+    .reward-desc { font-size: 0.85rem; color: var(--text); }
 
-    .nsv-list { max-height: 200px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; }
-    .nsv-item { display: flex; align-items: center; justify-content: space-between; background: rgba(255,255,255,0.02); padding: 8px 12px; border-radius: 10px; border: 1px solid var(--border); font-size: 0.85rem; cursor: pointer; }
-    .nsv-item.completed { text-decoration: line-through; color: var(--green); border-color: var(--green); background: rgba(46,213,115,0.08); }
+    /* ארוחות מוכנות */
+    .preset-card { background: rgba(0,0,0,0.25); border-radius: 12px; padding: 12px; border: 1px solid var(--border); margin-top: 10px; }
+    .preset-macros { display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--subtext); margin: 8px 0; }
+    .preset-macros span strong { color: var(--text); }
 
     .checklist label { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 0.9rem; cursor: pointer; }
     .checklist input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent); }
@@ -83,69 +91,79 @@
     </div>
   </div>
 
-  <!-- ציון תזונה יומי -->
+  <!-- תגמולים לפי אבני דרך של משקל -->
   <div class="card">
-    <div class="grid-2" style="align-items: center;">
-      <div>
-        <span class="card-title" style="margin:0;">ציון תזונה יומי</span>
-        <span style="font-size:0.75rem; color:var(--subtext);">שקלול גירעון, חלבון והרגלים</span>
-      </div>
-      <div style="text-align: left;">
-        <span class="score-badge" id="dailyScore">--</span><span style="font-size:1rem; color:var(--subtext);">/100</span>
-      </div>
+    <div class="card-title">
+      <span>🎁 תגמולי משקל (דברים שלא יכלתי לעשות קודם)</span>
+    </div>
+    <span style="font-size:0.75rem; color:var(--subtext); display:block; margin-bottom:8px;">כל ירידה במשקל פותחת פעילות חדשה, ספורטיבית ומאתגרת:</span>
+    <div id="rewardsContainer" style="max-height: 240px; overflow-y: auto;"></div>
+    
+    <!-- הוספת תגמול מותאם אישית -->
+    <div style="display:flex; gap:6px; margin-top:10px;">
+      <input type="number" id="customRewWeight" placeholder="משקל יעד" style="flex:1;">
+      <input type="text" id="customRewDesc" placeholder="מה התגמול? (למשל: סדנת גלישת גלים)" style="flex:2;">
+      <button class="sm" onclick="addCustomReward()">+ הוסף</button>
     </div>
   </div>
 
-  <!-- מחשבון מתכונים ורכיבים בבישול -->
+  <!-- מחשבון ארוחות מוכנות מראש (Log Meals) -->
   <div class="card">
-    <span class="card-title">מחשבון בישול ורכיבים</span>
-    <div style="display: flex; gap: 6px; margin: 10px 0;">
-      <select id="foodSelect" style="flex: 2;"></select>
-      <input type="number" id="foodGrams" placeholder="גרם" style="flex: 1;">
-      <button onclick="addIngredient()">+ הוסף</button>
+    <div class="card-title">
+      <span>🍽️ לוג ארוחות מוכנות מראש</span>
     </div>
-    <div id="recipeList"></div>
-    <div style="background: rgba(0,0,0,0.2); padding: 12px; border-radius: 12px; margin-top: 10px; border: 1px solid var(--border);">
-      <div class="grid-3" style="margin-bottom: 8px;">
-        <div class="metric-box"><span>קלוריות</span><strong id="mCal">0</strong></div>
-        <div class="metric-box"><span>חלבון מלא</span><strong id="mProFull" style="color:var(--cyan);">0g</strong></div>
-        <div class="metric-box"><span>חלבון חלקי</span><strong id="mProPart" style="color:var(--yellow);">0g</strong></div>
+    <span style="font-size:0.75rem; color:var(--subtext);">בחרי ארוחה קבועה והוסיפי אותה ישירות ליום בלחיצה אחת:</span>
+    
+    <select id="presetSelect" onchange="renderSelectedPresetPreview()" style="margin-top:8px;"></select>
+
+    <div class="preset-card" id="presetPreviewBox">
+      <div class="preset-macros">
+        <span>קלוריות: <strong id="pCal">0</strong></span>
+        <span>חלבון מלא: <strong id="pProFull" style="color:var(--cyan);">0g</strong></span>
+        <span>חלבון חלקי: <strong id="pProPart" style="color:var(--yellow);">0g</strong></span>
+      </div>
+      <div class="preset-macros">
+        <span>פחמימות: <strong id="pCarb">0g</strong></span>
+        <span>שומנים: <strong id="pFat">0g</strong></span>
+      </div>
+      <button style="width:100%; margin-top:6px;" onclick="logPresetMeal()">+ רשום ארוחה זו ליום שלי</button>
+    </div>
+
+    <!-- טופס יצירת ארוחה חדשה ללוג הקבוע -->
+    <div style="margin-top: 14px; border-top: 1px solid var(--border); padding-top: 10px;">
+      <span style="font-size:0.8rem; font-weight:700; color:var(--cyan); display:block; margin-bottom:6px;">הוספת ארוחה קבועה חדשה ללוג:</span>
+      <input type="text" id="newMealName" placeholder="שם הארוחה (למשל: סלט ירקות עם עדשים וטופו)" style="margin-bottom:6px;">
+      <div class="grid-3" style="margin-bottom:6px;">
+        <input type="number" id="newMealCal" placeholder="קלוריות">
+        <input type="number" id="newMealProFull" placeholder="חלבון מלא (g)">
+        <input type="number" id="newMealProPart" placeholder="חלבון חלקי (g)">
       </div>
       <div class="grid-2">
-        <div class="metric-box"><span>פחמימות</span><strong id="mCarb">0g</strong></div>
-        <div class="metric-box"><span>שומנים</span><strong id="mFat">0g</strong></div>
+        <input type="number" id="newMealCarb" placeholder="פחמימה (g)">
+        <input type="number" id="newMealFat" placeholder="שומן (g)">
       </div>
-      <div style="margin-top: 10px; font-size: 0.8rem; border-top: 1px solid var(--border); padding-top: 8px;">
-        <strong style="color:var(--cyan); display:block; margin-bottom:4px;">מיקרו-נוטריינטים:</strong>
-        <span id="microDisplay" style="color: var(--subtext);">הוסיפי רכיבים לצפייה</span>
-        <strong style="color:var(--accent); display:block; margin: 6px 0 2px;">הערות אנטי-נוטריינטים:</strong>
-        <span id="antiDisplay" style="color: var(--subtext);">אין כרגע</span>
-      </div>
-      <div style="display:flex; gap:6px; margin-top:10px;">
-        <button style="flex:1;" onclick="commitMealToDaily()">רשום מנה לסך היומי</button>
-        <button class="secondary sm" style="width:auto; margin:0;" onclick="clearRecipe()">נקה מתכון</button>
-      </div>
+      <button class="secondary sm" style="margin-top:8px;" onclick="saveNewPresetMeal()">💾 שמור ארוחה זו בלוג הקבוע</button>
     </div>
   </div>
 
-  <!-- סך תזונה יומי -->
+  <!-- סך תזונה מצטבר היום + ציון יומי -->
   <div class="card">
-    <span class="card-title">סך תזונה מצטבר היום</span>
+    <div class="card-title">
+      <span>סך תזונה יומי מצטבר</span>
+      <div style="display:flex; align-items:center; gap:4px;">
+        <span style="font-size:0.8rem; color:var(--subtext);">ציון יומי:</span>
+        <span class="score-badge" id="dailyScore" style="font-size:1.3rem;">--</span>
+      </div>
+    </div>
     <div class="grid-2">
       <div class="metric-box"><span>קלוריות (יעד 1,550)</span><strong id="dayCal">0</strong></div>
       <div class="metric-box"><span>חלבון כולל (יעד 150g)</span><strong id="dayPro">0g</strong></div>
     </div>
-    <button style="background:transparent; border:none; color:var(--subtext); font-size:0.8rem; width:100%; margin-top:8px;" onclick="resetDay()">אפס יום תזונה</button>
-  </div>
-
-  <!-- ניצחונות ללא משקל -->
-  <div class="card">
-    <span class="card-title">ניצחונות ללא משקל (לחצי לחגיגה 🎉)</span>
-    <div class="nsv-list" id="nsvContainer"></div>
-    <div style="display: flex; gap: 8px; margin-top: 10px;">
-      <input type="text" id="newNsvInput" placeholder="הוסיפי ניצחון אישי חדש...">
-      <button onclick="addCustomNSV()">הוסף</button>
+    <div style="margin-top:8px; font-size:0.8rem; display:flex; justify-content:space-between;">
+      <span>חלבון מלא: <strong id="dayProFull" style="color:var(--cyan);">0g</strong></span>
+      <span>חלבון חלקי: <strong id="dayProPart" style="color:var(--yellow);">0g</strong></span>
     </div>
+    <button style="background:transparent; border:none; color:var(--subtext); font-size:0.8rem; width:100%; margin-top:8px;" onclick="resetDay()">אפס יום תזונה</button>
   </div>
 
   <!-- מדדי כוח SBD -->
@@ -170,173 +188,135 @@
 </div>
 
 <script>
-  const FOOD_DB = [
-    { name: "חזה עוף מבושל/צלוי", cal: 165, proFull: 31, proPart: 0, fat: 3.6, carb: 0, micro: "B12, ניאצין, סלניום", anti: "אין" },
-    { name: "בקר רזה טחון (5%)", cal: 175, proFull: 26, proPart: 0, fat: 7.5, carb: 0, micro: "ברזל הֶם, אבץ, B12", anti: "אין" },
-    { name: "טופו מוצק", cal: 120, proFull: 12, proPart: 0, fat: 6, carb: 2, micro: "סידן, ברזל, מגנזיום", anti: "פיטאטים" },
-    { name: "קוטג׳ 5%", cal: 95, proFull: 11, proPart: 0, fat: 5, carb: 2.5, micro: "סידן, B12", anti: "לקטוז מופחת" },
-    { name: "ביצה גדולה (יח׳)", cal: 72, proFull: 6.3, proPart: 0, fat: 5, carb: 0.4, micro: "כולין, ויטמין D, B12", anti: "אין במבושל" },
-    { name: "עדשים מבושלות", cal: 116, proFull: 0, proPart: 9, fat: 0.4, carb: 20, micro: "ברזל, חומצה פולית", anti: "חומצה פיטית" },
-    { name: "שעועית ירוקה", cal: 31, proFull: 0, proPart: 1.8, fat: 0.2, carb: 7, micro: "ויטמין K, ויטמין C", anti: "מעט לקטינים" },
-    { name: "כרוב לבן", cal: 25, proFull: 0, proPart: 1.3, fat: 0.1, carb: 5.8, micro: "ויטמין C, גלוקוזינולטים", anti: "גויטרוגנים עדינים" },
-    { name: "בטטה צלויה", cal: 90, proFull: 0, proPart: 2, fat: 0.15, carb: 21, micro: "בטא-קרוטן, אשלגן", anti: "אין" },
-    { name: "תרד מבושל", cal: 23, proFull: 0, proPart: 3, fat: 0.3, carb: 3.8, micro: "ברזל, חומצה פולית", anti: "חומצה אוקסלית" },
-    { name: "שיבולת שועל", cal: 389, proFull: 0, proPart: 16.9, fat: 6.9, carb: 66, micro: "בטא-גלוקן, מגנזיום", anti: "חומצה פיטית" },
-    { name: "ציר עצמות", cal: 40, proFull: 0, proPart: 9, fat: 0.5, carb: 0.2, micro: "קולגן, גליצין", anti: "אין" },
-    { name: "שמן זית", cal: 884, proFull: 0, proPart: 0, fat: 100, carb: 0, micro: "ויטמין E, פוליפנולים", anti: "אין" }
+  // רשימת תגמולי משקל התחלתיים מ-115 ועד 75 ק"ג
+  const defaultRewards = [
+    { target: 110, desc: "קפיצה נקייה על ארגז פליומטרי (Plyo Box Jump) בגובה 50 ס״מ", done: false },
+    { target: 105, desc: "רכיבה על סוסים בטבע (חוות רבות מגבילות משקל עד 100-105 ק״ג)", done: false },
+    { target: 100, desc: "טיפוס בקיר טיפוס בולדר / מסלול חבלים אתגרי", done: false },
+    { target: 95, desc: "חתירה בסאפ (SUP) או קיאק ימי יציב וממושך ללא מאמץ של שיווי משקל", done: false },
+    { target: 90, desc: "השלמת 5 עליות מתח (Pull-ups) עם משקל גוף נקי בלבד", done: false },
+    { target: 85, desc: "סדנת גלישת גלים בים וקימה מהירה על הגלשן בתנועת פופ-אפ חלקה", done: false },
+    { target: 80, desc: "צניחה חופשית טנדם (מגבלות משקל קפדניות בצניחה)", done: false },
+    { target: 75, desc: "יום שלם בכל מתקני האקסטרים ורכבות ההרים בפארק שעשועים בלי לחשוב פעמיים על רתמה", done: false }
   ];
 
-  let currentRecipe = [];
-
-  const defaultNSVs = [
-    "סגירת חגורת הכוח על חור הדוק ופנימי יותר",
-    "נעילת 140 ק״ג בדדליפט בקלות ובמנח יציב",
-    "שבוע שלם של 8.5 שעות שינה רצופות בלי יקיצות",
-    "תחושת קלילות ומהירות בעלייה במדרגות",
-    "הבגדים האהובים יושבים משוחרר ונוח יותר",
-    "בדיקות דם מושלמות (פריטין, ברזל ו-TSH יציבים)",
-    "השרירים בכתפיים ובגב העליון נראים מוגדרים במראה",
-    "שליטה מלאה בארוחה חופשית בסופ״ש בלי רגשות אשם",
-    "התאוששות שרירית חלקה ומהירה בין אימונים כבדים",
-    "שמירה על סקוואט של 110 ק״ג בעומק נקי",
-    "השגת 8,500 צעדים בלי לחשוב על זה פעמיים",
-    "אנרגיה גבוהה ויציבה לאורך כל שעות היום בלי נפילות",
-    "ירידה במידת מכנסיים ראשונה",
-    "התעוררות בבוקר רעננה עוד לפני הצלצול",
-    "טבעות ושעון יד מרגישים משוחררים יותר על היד",
-    "תחושת רוגע מנטלי הודות לשירה ולקריאה בערב",
-    "ירידה בצורך במתוקים מעובדים הודות לשובע מהחלבון",
-    "הגדרה בולטת בשרירי הארבע-ראשי מעל הברך",
-    "ביצוע שבוע Deload מלא לפי התוכנית ללא פחד",
-    "הבנה עמוקה שהכוח והשרירים נשארים בזמן שהשומן יורד"
+  // ארוחות ברירת מחדל מוכנות מראש בלוג
+  const defaultPresets = [
+    { name: "סלט ירקות עשיר עם עדשים וטופו צרוב", cal: 420, proFull: 22, proPart: 12, carb: 38, fat: 14 },
+    { name: "חזה עוף צלוי (200 גרם) עם בטטה ושעועית ירוקה", cal: 480, proFull: 62, proPart: 4, carb: 42, fat: 8 },
+    { name: "קערת שיבולת שועל, סקופ חלבון ופירות יער", cal: 380, proFull: 25, proPart: 7, carb: 48, fat: 6 },
+    { name: "בקר רזה טחון (180 גרם) מוקפץ עם כרוב ואורז", cal: 510, proFull: 46, proPart: 3, carb: 35, fat: 16 },
+    { name: "קוטג׳ 5% עם ירקות חתוכים, ביצה קשה וקרקר כוסמין", cal: 320, proFull: 29, proPart: 2, carb: 18, fat: 12 }
   ];
 
-  function initFoodSelect() {
-    const sel = document.getElementById('foodSelect');
-    if (sel) {
-      sel.innerHTML = FOOD_DB.map((f, i) => `<option value="${i}">${f.name}</option>`).join('');
+  function loadPresets() {
+    let presets = JSON.parse(localStorage.getItem('meal_presets'));
+    if (!presets || presets.length === 0) {
+      presets = defaultPresets;
+      localStorage.setItem('meal_presets', JSON.stringify(presets));
     }
+    const sel = document.getElementById('presetSelect');
+    sel.innerHTML = presets.map((p, i) => `<option value="${i}">${p.name}</option>`).join('');
+    renderSelectedPresetPreview();
   }
 
-  function addIngredient() {
-    const sel = document.getElementById('foodSelect');
-    const grams = Number(document.getElementById('foodGrams').value);
-    if (!grams || grams <= 0) return;
-    const food = FOOD_DB[sel.value];
-    const factor = grams / 100;
-    
-    currentRecipe.push({
-      name: food.name,
-      grams: grams,
-      cal: Math.round(food.cal * factor),
-      proFull: Math.round(food.proFull * factor * 10) / 10,
-      proPart: Math.round(food.proPart * factor * 10) / 10,
-      carb: Math.round(food.carb * factor * 10) / 10,
-      fat: Math.round(food.fat * factor * 10) / 10,
-      micro: food.micro,
-      anti: food.anti
-    });
-
-    document.getElementById('foodGrams').value = '';
-    renderRecipe();
+  function renderSelectedPresetPreview() {
+    const presets = JSON.parse(localStorage.getItem('meal_presets')) || defaultPresets;
+    const idx = document.getElementById('presetSelect').value;
+    const p = presets[idx];
+    if (!p) return;
+    document.getElementById('pCal').innerText = p.cal;
+    document.getElementById('pProFull').innerText = p.proFull + 'g';
+    document.getElementById('pProPart').innerText = p.proPart + 'g';
+    document.getElementById('pCarb').innerText = p.carb + 'g';
+    document.getElementById('pFat').innerText = p.fat + 'g';
   }
 
-  function renderRecipe() {
-    const list = document.getElementById('recipeList');
-    list.innerHTML = currentRecipe.map((item, idx) => `
-      <div class="recipe-row">
-        <span><strong>${item.name}</strong> (${item.grams} גרם)</span>
-        <div>
-          <span style="color:var(--subtext); font-size:0.75rem;">${item.cal} קק״ל</span>
-          <button style="background:transparent; color:var(--accent); padding:2px 6px;" onclick="removeIngredient(${idx})">✕</button>
-        </div>
-      </div>
-    `).join('');
-
-    let tCal = 0, tProFull = 0, tProPart = 0, tCarb = 0, tFat = 0;
-    let micros = new Set();
-    let antis = new Set();
-
-    currentRecipe.forEach(r => {
-      tCal += r.cal;
-      tProFull += r.proFull;
-      tProPart += r.proPart;
-      tCarb += r.carb;
-      tFat += r.fat;
-      if (r.micro && r.micro !== 'אין') micros.add(r.micro);
-      if (r.anti && r.anti !== 'אין') antis.add(r.anti);
-    });
-
-    document.getElementById('mCal').innerText = tCal;
-    document.getElementById('mProFull').innerText = tProFull.toFixed(1) + 'g';
-    document.getElementById('mProPart').innerText = tProPart.toFixed(1) + 'g';
-    document.getElementById('mCarb').innerText = tCarb.toFixed(1) + 'g';
-    document.getElementById('mFat').innerText = tFat.toFixed(1) + 'g';
-    document.getElementById('microDisplay').innerText = micros.size > 0 ? Array.from(micros).join(' • ') : 'אין';
-    document.getElementById('antiDisplay').innerText = antis.size > 0 ? Array.from(antis).join(' • ') : 'אין';
-  }
-
-  function removeIngredient(idx) {
-    currentRecipe.splice(idx, 1);
-    renderRecipe();
-  }
-
-  function clearRecipe() {
-    currentRecipe = [];
-    renderRecipe();
-  }
-
-  function commitMealToDaily() {
-    if (currentRecipe.length === 0) return;
-    let tCal = 0, tProFull = 0, tProPart = 0;
-    currentRecipe.forEach(r => {
-      tCal += r.cal;
-      tProFull += r.proFull;
-      tProPart += r.proPart;
-    });
+  function logPresetMeal() {
+    const presets = JSON.parse(localStorage.getItem('meal_presets')) || defaultPresets;
+    const idx = document.getElementById('presetSelect').value;
+    const p = presets[idx];
+    if (!p) return;
 
     const todayKey = 'nutr_' + new Date().toDateString();
     const nutr = JSON.parse(localStorage.getItem(todayKey) || '{"cal":0,"proFull":0,"proPart":0}');
-    nutr.cal += tCal;
-    nutr.proFull = Math.round((nutr.proFull + tProFull) * 10) / 10;
-    nutr.proPart = Math.round((nutr.proPart + tProPart) * 10) / 10;
+    nutr.cal += p.cal;
+    nutr.proFull = Math.round((nutr.proFull + p.proFull) * 10) / 10;
+    nutr.proPart = Math.round((nutr.proPart + p.proPart) * 10) / 10;
     localStorage.setItem(todayKey, JSON.stringify(nutr));
 
-    clearRecipe();
     loadDashboard();
-    if (typeof confetti === 'function') confetti({ particleCount: 40, spread: 50 });
+    if (typeof confetti === 'function') confetti({ particleCount: 35, spread: 50 });
   }
 
-  function addCustomNSV() {
-    const input = document.getElementById('newNsvInput');
-    const val = input.value.trim();
-    if (!val) return;
-    const nsvs = JSON.parse(localStorage.getItem('nsv_list') || '[]');
-    nsvs.unshift({ text: val, done: false });
-    localStorage.setItem('nsv_list', JSON.stringify(nsvs));
-    input.value = '';
-    renderNSVs(nsvs);
-  }
+  function saveNewPresetMeal() {
+    const name = document.getElementById('newMealName').value.trim();
+    const cal = Number(document.getElementById('newMealCal').value) || 0;
+    const proFull = Number(document.getElementById('newMealProFull').value) || 0;
+    const proPart = Number(document.getElementById('newMealProPart').value) || 0;
+    const carb = Number(document.getElementById('newMealCarb').value) || 0;
+    const fat = Number(document.getElementById('newMealFat').value) || 0;
 
-  function renderNSVs(nsvs) {
-    const container = document.getElementById('nsvContainer');
-    if (!container) return;
-    container.innerHTML = nsvs.map((item, idx) => `
-      <div class="nsv-item ${item.done ? 'completed' : ''}" onclick="toggleNSV(${idx})">
-        <span>${item.text}</span>
-        <span>${item.done ? '✓' : '○'}</span>
-      </div>
-    `).join('');
-  }
-
-  function toggleNSV(idx) {
-    const nsvs = JSON.parse(localStorage.getItem('nsv_list'));
-    nsvs[idx].done = !nsvs[idx].done;
-    if (nsvs[idx].done && typeof confetti === 'function') {
-      confetti({ particleCount: 70, spread: 60, origin: { y: 0.7 } });
+    if (!name || cal <= 0) {
+      alert("אנא הזיני לפחות שם ארוחה וכמות קלוריות");
+      return;
     }
-    localStorage.setItem('nsv_list', JSON.stringify(nsvs));
-    renderNSVs(nsvs);
+
+    const presets = JSON.parse(localStorage.getItem('meal_presets')) || defaultPresets;
+    presets.push({ name, cal, proFull, proPart, carb, fat });
+    localStorage.setItem('meal_presets', JSON.stringify(presets));
+
+    document.getElementById('newMealName').value = '';
+    document.getElementById('newMealCal').value = '';
+    document.getElementById('newMealProFull').value = '';
+    document.getElementById('newMealProPart').value = '';
+    document.getElementById('newMealCarb').value = '';
+    document.getElementById('newMealFat').value = '';
+
+    loadPresets();
+    alert("הארוחה נוספה בהצלחה ללוג הקבוע!");
+  }
+
+  function loadRewards(curWeight) {
+    let rewards = JSON.parse(localStorage.getItem('rewards_list'));
+    if (!rewards) {
+      rewards = defaultRewards;
+      localStorage.setItem('rewards_list', JSON.stringify(rewards));
+    }
+
+    const container = document.getElementById('rewardsContainer');
+    container.innerHTML = rewards.map((r, i) => {
+      const isUnlocked = curWeight <= r.target;
+      return `
+        <div class="reward-item ${isUnlocked ? 'unlocked' : ''}">
+          <div class="reward-header">
+            <span class="reward-weight">🎯 יעד: ${r.target} ק״ג</span>
+            <span style="font-size:0.75rem; font-weight:700; color:${isUnlocked ? 'var(--green)' : 'var(--subtext)'};">
+              ${isUnlocked ? '🔓 נפתח לביצוע! 🎉' : '🔒 ממתין למשקל'}
+            </span>
+          </div>
+          <span class="reward-desc">${r.desc}</span>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function addCustomReward() {
+    const target = Number(document.getElementById('customRewWeight').value);
+    const desc = document.getElementById('customRewDesc').value.trim();
+    if (!target || !desc) return;
+
+    const rewards = JSON.parse(localStorage.getItem('rewards_list')) || defaultRewards;
+    rewards.push({ target, desc, done: false });
+    rewards.sort((a, b) => b.target - a.target);
+    localStorage.setItem('rewards_list', JSON.stringify(rewards));
+
+    document.getElementById('customRewWeight').value = '';
+    document.getElementById('customRewDesc').value = '';
+
+    const weights = JSON.parse(localStorage.getItem('weights') || '[]');
+    const curW = weights.length > 0 ? weights[weights.length - 1].val : 115.0;
+    loadRewards(curW);
   }
 
   function updateWeight() {
@@ -347,6 +327,7 @@
     localStorage.setItem('weights', JSON.stringify(weights));
     document.getElementById('newWeightInput').value = '';
     loadDashboard();
+    if (typeof confetti === 'function') confetti({ particleCount: 60, spread: 60 });
   }
 
   function saveHabits() {
@@ -379,12 +360,16 @@
     document.getElementById('pctDisplay').innerText = pct + '% הושלמו';
     document.getElementById('targetBar').style.width = pct + '%';
 
+    loadRewards(curW);
+
     const todayKey = 'nutr_' + new Date().toDateString();
     const nutr = JSON.parse(localStorage.getItem(todayKey) || '{"cal":0,"proFull":0,"proPart":0}');
     const totalPro = Math.round((nutr.proFull + nutr.proPart) * 10) / 10;
     
     document.getElementById('dayCal').innerText = nutr.cal;
     document.getElementById('dayPro').innerText = totalPro + 'g';
+    document.getElementById('dayProFull').innerText = nutr.proFull + 'g';
+    document.getElementById('dayProPart').innerText = nutr.proPart + 'g';
 
     let score = 0;
     if (nutr.cal > 0) {
@@ -404,13 +389,6 @@
 
     document.getElementById('dailyScore').innerText = score;
 
-    let nsvs = JSON.parse(localStorage.getItem('nsv_list'));
-    if (!nsvs) {
-      nsvs = defaultNSVs.map(text => ({ text, done: false }));
-      localStorage.setItem('nsv_list', JSON.stringify(nsvs));
-    }
-    renderNSVs(nsvs);
-
     habits.forEach((checked, i) => {
       const el = document.getElementById('h' + (i + 1));
       if (el) el.checked = checked;
@@ -418,7 +396,7 @@
   }
 
   window.onload = () => {
-    initFoodSelect();
+    loadPresets();
     loadDashboard();
   };
 </script>
