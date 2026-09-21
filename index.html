@@ -1,404 +1,450 @@
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Recomp 75 • Athlete Dashboard</title>
-  <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-  <style>
-    :root {
-      --bg: #0b0d17;
-      --card: #15192b;
-      --accent: #ff4772;
-      --cyan: #00d2d3;
-      --green: #2ed573;
-      --yellow: #ffa502;
-      --purple: #a55eea;
-      --text: #f8f9fa;
-      --subtext: #8892b0;
-      --border: rgba(255,255,255,0.07);
-    }
-    * { box-sizing: border-box; font-family: 'Assistant', sans-serif; }
-    body { background: var(--bg); color: var(--text); margin: 0; padding: 16px; display: flex; justify-content: center; }
-    .container { width: 100%; max-width: 520px; display: flex; flex-direction: column; gap: 14px; }
-    
-    header { text-align: center; padding: 6px 0; }
-    h1 { margin: 0; font-size: 1.6rem; font-weight: 800; color: var(--accent); }
-    header p { margin: 3px 0 0; font-size: 0.85rem; color: var(--subtext); }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>דשבורד מעקב ואימונים</title>
+    <!-- Chart.js לגרפים דינמיים -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --success: #10b981;
+        }
 
-    .card { background: var(--card); border-radius: 16px; padding: 16px; border: 1px solid var(--border); box-shadow: 0 8px 24px rgba(0,0,0,0.3); }
-    .card-title { font-size: 0.95rem; font-weight: 700; color: var(--cyan); margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 24px 16px;
+            display: flex;
+            justify-content: center;
+        }
 
-    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+        .container {
+            width: 100%;
+            max-width: 900px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
 
-    .metric-box { background: rgba(255,255,255,0.03); padding: 10px; border-radius: 12px; text-align: center; border: 1px solid var(--border); }
-    .metric-box span { font-size: 0.75rem; color: var(--subtext); display: block; }
-    .metric-box strong { font-size: 1.3rem; font-weight: 800; color: var(--text); }
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
 
-    .progress-bar-wrap { background: #0e1122; border-radius: 10px; height: 12px; width: 100%; margin: 8px 0; overflow: hidden; border: 1px solid var(--border); }
-    .progress-bar-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--cyan)); width: 0%; transition: width 0.4s ease; }
+        h2 {
+            margin-top: 0;
+            margin-bottom: 16px;
+            font-size: 1.25rem;
+            color: var(--text-main);
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 8px;
+        }
 
-    input, select { background: #0e1122; border: 1px solid var(--border); color: #fff; padding: 10px; border-radius: 10px; font-size: 0.9rem; width: 100%; }
-    button { background: var(--accent); color: #fff; border: none; font-weight: 700; border-radius: 10px; padding: 10px 14px; cursor: pointer; white-space: nowrap; }
-    button.secondary { background: #232a45; border: 1px solid var(--cyan); color: var(--cyan); width: 100%; margin-top: 8px; }
-    button.sm { padding: 6px 10px; font-size: 0.8rem; }
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
 
-    /* תגמולים */
-    .reward-item { display: flex; flex-direction: column; gap: 4px; background: rgba(255,255,255,0.02); padding: 10px 12px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 8px; transition: all 0.2s; }
-    .reward-item.unlocked { border-color: var(--green); background: rgba(46,213,115,0.06); }
-    .reward-header { display: flex; justify-content: space-between; align-items: center; }
-    .reward-weight { font-weight: 800; color: var(--yellow); font-size: 0.9rem; }
-    .reward-item.unlocked .reward-weight { color: var(--green); }
-    .reward-desc { font-size: 0.85rem; color: var(--text); }
+        @media (max-width: 640px) {
+            .grid-2 { grid-template-columns: 1fr; }
+        }
 
-    /* ארוחות מוכנות */
-    .preset-card { background: rgba(0,0,0,0.25); border-radius: 12px; padding: 12px; border: 1px solid var(--border); margin-top: 10px; }
-    .preset-macros { display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--subtext); margin: 8px 0; }
-    .preset-macros span strong { color: var(--text); }
+        label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
 
-    .checklist label { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 0.9rem; cursor: pointer; }
-    .checklist input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent); }
+        input, select, button {
+            width: 100%;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            box-sizing: border-box;
+            font-size: 1rem;
+        }
 
-    .score-badge { font-size: 1.8rem; font-weight: 800; color: var(--green); }
-  </style>
+        button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            margin-top: 8px;
+        }
+
+        button:hover {
+            background-color: var(--primary-hover);
+        }
+
+        /* סולם התגמולים */
+        .milestone-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            margin-bottom: 10px;
+            background: #fff;
+        }
+
+        .milestone-item.unlocked {
+            border-color: var(--success);
+            background-color: #ecfdf5;
+        }
+
+        .badge {
+            background-color: var(--border);
+            color: var(--text-main);
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.875rem;
+        }
+
+        .milestone-item.unlocked .badge {
+            background-color: var(--success);
+            color: white;
+        }
+
+        /* מדדי יחס כוח */
+        .ratio-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 12px;
+            margin-top: 12px;
+        }
+
+        .ratio-card {
+            background-color: #f1f5f9;
+            border-radius: 8px;
+            padding: 12px;
+            text-align: center;
+        }
+
+        .ratio-title {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+        }
+
+        .ratio-value {
+            font-size: 1.25rem;
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        /* היסטוריית סטים */
+        .log-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 12px;
+            font-size: 0.9rem;
+        }
+
+        .log-table th, .log-table td {
+            border-bottom: 1px solid var(--border);
+            padding: 8px 4px;
+            text-align: right;
+        }
+
+        .delete-btn {
+            background: none;
+            border: none;
+            color: #ef4444;
+            cursor: pointer;
+            padding: 0;
+            width: auto;
+            font-size: 1rem;
+        }
+    </style>
 </head>
 <body>
 
 <div class="container">
-  <header>
-    <h1>RECOMP 75 DASHBOARD</h1>
-    <p>115 ק״ג ➔ 75 ק״ג • כוח • תזונה מדויקת • בריאות</p>
-  </header>
 
-  <!-- מד קרבה ליעד -->
-  <div class="card">
-    <div class="card-title">
-      <span>מד קרבה ליעד 75 ק״ג</span>
-      <span id="pctDisplay" style="color: var(--accent); font-weight: 800;">0%</span>
-    </div>
-    <div class="progress-bar-wrap">
-      <div id="targetBar" class="progress-bar-fill"></div>
-    </div>
-    <div class="grid-2" style="margin-top: 6px;">
-      <div class="metric-box"><span>משקל נוכחי</span><strong id="curWeight">115.0</strong></div>
-      <div class="metric-box"><span>נותר להשיל</span><strong id="remainWeight">40.0 ק״ג</strong></div>
-    </div>
-    <div style="display: flex; gap: 8px; margin-top: 10px;">
-      <input type="number" step="0.1" id="newWeightInput" placeholder="שקילת חמישי (ק״ג)">
-      <button onclick="updateWeight()">עדכן</button>
-    </div>
-  </div>
-
-  <!-- תגמולים לפי אבני דרך של משקל -->
-  <div class="card">
-    <div class="card-title">
-      <span>🎁 תגמולי משקל (דברים שלא יכלתי לעשות קודם)</span>
-    </div>
-    <span style="font-size:0.75rem; color:var(--subtext); display:block; margin-bottom:8px;">כל ירידה במשקל פותחת פעילות חדשה, ספורטיבית ומאתגרת:</span>
-    <div id="rewardsContainer" style="max-height: 240px; overflow-y: auto;"></div>
-    
-    <!-- הוספת תגמול מותאם אישית -->
-    <div style="display:flex; gap:6px; margin-top:10px;">
-      <input type="number" id="customRewWeight" placeholder="משקל יעד" style="flex:1;">
-      <input type="text" id="customRewDesc" placeholder="מה התגמול? (למשל: סדנת גלישת גלים)" style="flex:2;">
-      <button class="sm" onclick="addCustomReward()">+ הוסף</button>
-    </div>
-  </div>
-
-  <!-- מחשבון ארוחות מוכנות מראש (Log Meals) -->
-  <div class="card">
-    <div class="card-title">
-      <span>🍽️ לוג ארוחות מוכנות מראש</span>
-    </div>
-    <span style="font-size:0.75rem; color:var(--subtext);">בחרי ארוחה קבועה והוסיפי אותה ישירות ליום בלחיצה אחת:</span>
-    
-    <select id="presetSelect" onchange="renderSelectedPresetPreview()" style="margin-top:8px;"></select>
-
-    <div class="preset-card" id="presetPreviewBox">
-      <div class="preset-macros">
-        <span>קלוריות: <strong id="pCal">0</strong></span>
-        <span>חלבון מלא: <strong id="pProFull" style="color:var(--cyan);">0g</strong></span>
-        <span>חלבון חלקי: <strong id="pProPart" style="color:var(--yellow);">0g</strong></span>
-      </div>
-      <div class="preset-macros">
-        <span>פחמימות: <strong id="pCarb">0g</strong></span>
-        <span>שומנים: <strong id="pFat">0g</strong></span>
-      </div>
-      <button style="width:100%; margin-top:6px;" onclick="logPresetMeal()">+ רשום ארוחה זו ליום שלי</button>
+    <!-- עדכון משקל נוכחי -->
+    <div class="card">
+        <h2>משקל גוף נוכחי</h2>
+        <div style="display: flex; gap: 12px; align-items: flex-end;">
+            <div style="flex: 1;">
+                <label for="currentWeight">משקל עדכני (ק"ג):</label>
+                <input type="number" id="currentWeight" step="0.1" placeholder="115">
+            </div>
+            <div style="flex: 1;">
+                <button onclick="updateWeight()">שמור משקל</button>
+            </div>
+        </div>
     </div>
 
-    <!-- טופס יצירת ארוחה חדשה ללוג הקבוע -->
-    <div style="margin-top: 14px; border-top: 1px solid var(--border); padding-top: 10px;">
-      <span style="font-size:0.8rem; font-weight:700; color:var(--cyan); display:block; margin-bottom:6px;">הוספת ארוחה קבועה חדשה ללוג:</span>
-      <input type="text" id="newMealName" placeholder="שם הארוחה (למשל: סלט ירקות עם עדשים וטופו)" style="margin-bottom:6px;">
-      <div class="grid-3" style="margin-bottom:6px;">
-        <input type="number" id="newMealCal" placeholder="קלוריות">
-        <input type="number" id="newMealProFull" placeholder="חלבון מלא (g)">
-        <input type="number" id="newMealProPart" placeholder="חלבון חלקי (g)">
-      </div>
-      <div class="grid-2">
-        <input type="number" id="newMealCarb" placeholder="פחמימה (g)">
-        <input type="number" id="newMealFat" placeholder="שומן (g)">
-      </div>
-      <button class="secondary sm" style="margin-top:8px;" onclick="saveNewPresetMeal()">💾 שמור ארוחה זו בלוג הקבוע</button>
+    <!-- סולם התגמולים המאושר -->
+    <div class="card">
+        <h2>סולם התגמולים והיעדים</h2>
+        <div id="milestonesContainer"></div>
     </div>
-  </div>
 
-  <!-- סך תזונה מצטבר היום + ציון יומי -->
-  <div class="card">
-    <div class="card-title">
-      <span>סך תזונה יומי מצטבר</span>
-      <div style="display:flex; align-items:center; gap:4px;">
-        <span style="font-size:0.8rem; color:var(--subtext);">ציון יומי:</span>
-        <span class="score-badge" id="dailyScore" style="font-size:1.3rem;">--</span>
-      </div>
+    <!-- מעקב כוח דינמי לפי אימון -->
+    <div class="card">
+        <h2>תיעוד אימון כוח דינמי</h2>
+        <div class="grid-2">
+            <div>
+                <label for="liftDate">תאריך:</label>
+                <input type="date" id="liftDate">
+            </div>
+            <div>
+                <label for="liftExercise">תרגיל:</label>
+                <select id="liftExercise" onchange="renderChartAndRatios()">
+                    <option value="Squat">סקוואט (Squat)</option>
+                    <option value="Bench Press">לחיצת חזה (Bench Press)</option>
+                    <option value="Deadlift">דדליפט (Deadlift)</option>
+                    <option value="Overhead Press">פרס (OHP)</option>
+                </select>
+            </div>
+            <div>
+                <label for="liftWeight">משקל שהורם (ק"ג):</label>
+                <input type="number" id="liftWeight" step="0.5" placeholder="80">
+            </div>
+            <div>
+                <label for="liftReps">חזרות:</label>
+                <input type="number" id="liftReps" min="1" placeholder="5">
+            </div>
+        </div>
+        <button onclick="logLift()">הוסף אימון למעקב</button>
     </div>
-    <div class="grid-2">
-      <div class="metric-box"><span>קלוריות (יעד 1,550)</span><strong id="dayCal">0</strong></div>
-      <div class="metric-box"><span>חלבון כולל (יעד 150g)</span><strong id="dayPro">0g</strong></div>
-    </div>
-    <div style="margin-top:8px; font-size:0.8rem; display:flex; justify-content:space-between;">
-      <span>חלבון מלא: <strong id="dayProFull" style="color:var(--cyan);">0g</strong></span>
-      <span>חלבון חלקי: <strong id="dayProPart" style="color:var(--yellow);">0g</strong></span>
-    </div>
-    <button style="background:transparent; border:none; color:var(--subtext); font-size:0.8rem; width:100%; margin-top:8px;" onclick="resetDay()">אפס יום תזונה</button>
-  </div>
 
-  <!-- מדדי כוח SBD -->
-  <div class="card">
-    <span class="card-title">מדדי כוח מרכזיים (SBD)</span>
-    <div class="grid-3">
-      <div class="metric-box"><span>סקוואט</span><strong id="sqVal">110</strong></div>
-      <div class="metric-box"><span>בנץ׳</span><strong id="bpVal">65</strong></div>
-      <div class="metric-box"><span>דדליפט</span><strong id="dlVal">140</strong></div>
+    <!-- גרף התקדמות ויחס חוזק למשקל גוף -->
+    <div class="card">
+        <h2>התקדמות ויחס כוח למסת גוף</h2>
+        <div class="ratio-grid" id="ratioSummary">
+            <!-- מחושב דינמית -->
+        </div>
+        <div style="margin-top: 24px; position: relative; height: 300px;">
+            <canvas id="strengthChart"></canvas>
+        </div>
     </div>
-  </div>
 
-  <!-- עוגני ברזל יומיים -->
-  <div class="card checklist">
-    <span class="card-title">עוגני ברזל יומיים</span>
-    <label><input type="checkbox" id="h1" onchange="saveHabits()"> שגרת בוקר (חצר, מתיחות, 2 מים)</label>
-    <label><input type="checkbox" id="h2" onchange="saveHabits()"> יעד צעדים יומי (8,500+)</label>
-    <label><input type="checkbox" id="h3" onchange="saveHabits()"> עמידה בחלבון (145–150 גרם)</label>
-    <label><input type="checkbox" id="h4" onchange="saveHabits()"> שירה / נגינה + 30 דק׳ קריאה</label>
-    <label><input type="checkbox" id="h5" onchange="saveHabits()"> שנת לילה רצופה (8.5 שעות)</label>
-  </div>
+    <!-- היסטוריית רישומים -->
+    <div class="card">
+        <h2>היסטוריית אימונים רשומים</h2>
+        <table class="log-table">
+            <thead>
+                <tr>
+                    <th>תאריך</th>
+                    <th>תרגיל</th>
+                    <th>משקל</th>
+                    <th>חזרות</th>
+                    <th>1RM משוער</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody id="logsTableBody"></tbody>
+        </table>
+    </div>
+
 </div>
 
 <script>
-  // רשימת תגמולי משקל התחלתיים מ-115 ועד 75 ק"ג
-  const defaultRewards = [
-    { target: 110, desc: "קפיצה נקייה על ארגז פליומטרי (Plyo Box Jump) בגובה 50 ס״מ", done: false },
-    { target: 105, desc: "רכיבה על סוסים בטבע (חוות רבות מגבילות משקל עד 100-105 ק״ג)", done: false },
-    { target: 100, desc: "טיפוס בקיר טיפוס בולדר / מסלול חבלים אתגרי", done: false },
-    { target: 95, desc: "חתירה בסאפ (SUP) או קיאק ימי יציב וממושך ללא מאמץ של שיווי משקל", done: false },
-    { target: 90, desc: "השלמת 5 עליות מתח (Pull-ups) עם משקל גוף נקי בלבד", done: false },
-    { target: 85, desc: "סדנת גלישת גלים בים וקימה מהירה על הגלשן בתנועת פופ-אפ חלקה", done: false },
-    { target: 80, desc: "צניחה חופשית טנדם (מגבלות משקל קפדניות בצניחה)", done: false },
-    { target: 75, desc: "יום שלם בכל מתקני האקסטרים ורכבות ההרים בפארק שעשועים בלי לחשוב פעמיים על רתמה", done: false }
-  ];
+    // הגדרת סולם התגמולים המאושר בלבד
+    const milestones = [
+        { target: 95, title: "קיר טיפוס / בולדרינג", desc: "טיפוס זורם וקליל עם יחס כוח-משקל משופר" },
+        { target: 90, title: "FlyBox (מנהרת רוח)", desc: "ריחוף יציב וחלק בזרם האוויר" },
+        { target: 85, title: "החלקה על הקרח", desc: "שליטה ושיווי משקל על הלהבים בעומס מפרקי מופחת" },
+        { target: 80, title: "רכיבה על סוסים בטבע", desc: "כניסה בטוחה ונינוחה למגבלת החוות" },
+        { target: 78, title: "שיעור יוגה ערסלים", desc: "היפוכים וריחוף בבדים תלויים בנוחות מלאה" },
+        { target: 75, title: "סדנת אקרובטיקה ועמידות ידיים", desc: "שליטה מלאה במשקל הגוף על מזרן" }
+    ];
 
-  // ארוחות ברירת מחדל מוכנות מראש בלוג
-  const defaultPresets = [
-    { name: "סלט ירקות עשיר עם עדשים וטופו צרוב", cal: 420, proFull: 22, proPart: 12, carb: 38, fat: 14 },
-    { name: "חזה עוף צלוי (200 גרם) עם בטטה ושעועית ירוקה", cal: 480, proFull: 62, proPart: 4, carb: 42, fat: 8 },
-    { name: "קערת שיבולת שועל, סקופ חלבון ופירות יער", cal: 380, proFull: 25, proPart: 7, carb: 48, fat: 6 },
-    { name: "בקר רזה טחון (180 גרם) מוקפץ עם כרוב ואורז", cal: 510, proFull: 46, proPart: 3, carb: 35, fat: 16 },
-    { name: "קוטג׳ 5% עם ירקות חתוכים, ביצה קשה וקרקר כוסמין", cal: 320, proFull: 29, proPart: 2, carb: 18, fat: 12 }
-  ];
+    // שליפת נתונים מ-localStorage
+    let currentWeight = parseFloat(localStorage.getItem('user_weight')) || 115;
+    let strengthLogs = JSON.parse(localStorage.getItem('strength_logs')) || [];
+    let chartInstance = null;
 
-  function loadPresets() {
-    let presets = JSON.parse(localStorage.getItem('meal_presets'));
-    if (!presets || presets.length === 0) {
-      presets = defaultPresets;
-      localStorage.setItem('meal_presets', JSON.stringify(presets));
-    }
-    const sel = document.getElementById('presetSelect');
-    sel.innerHTML = presets.map((p, i) => `<option value="${i}">${p.name}</option>`).join('');
-    renderSelectedPresetPreview();
-  }
+    document.getElementById('currentWeight').value = currentWeight;
+    document.getElementById('liftDate').valueAsDate = new Date();
 
-  function renderSelectedPresetPreview() {
-    const presets = JSON.parse(localStorage.getItem('meal_presets')) || defaultPresets;
-    const idx = document.getElementById('presetSelect').value;
-    const p = presets[idx];
-    if (!p) return;
-    document.getElementById('pCal').innerText = p.cal;
-    document.getElementById('pProFull').innerText = p.proFull + 'g';
-    document.getElementById('pProPart').innerText = p.proPart + 'g';
-    document.getElementById('pCarb').innerText = p.carb + 'g';
-    document.getElementById('pFat').innerText = p.fat + 'g';
-  }
-
-  function logPresetMeal() {
-    const presets = JSON.parse(localStorage.getItem('meal_presets')) || defaultPresets;
-    const idx = document.getElementById('presetSelect').value;
-    const p = presets[idx];
-    if (!p) return;
-
-    const todayKey = 'nutr_' + new Date().toDateString();
-    const nutr = JSON.parse(localStorage.getItem(todayKey) || '{"cal":0,"proFull":0,"proPart":0}');
-    nutr.cal += p.cal;
-    nutr.proFull = Math.round((nutr.proFull + p.proFull) * 10) / 10;
-    nutr.proPart = Math.round((nutr.proPart + p.proPart) * 10) / 10;
-    localStorage.setItem(todayKey, JSON.stringify(nutr));
-
-    loadDashboard();
-    if (typeof confetti === 'function') confetti({ particleCount: 35, spread: 50 });
-  }
-
-  function saveNewPresetMeal() {
-    const name = document.getElementById('newMealName').value.trim();
-    const cal = Number(document.getElementById('newMealCal').value) || 0;
-    const proFull = Number(document.getElementById('newMealProFull').value) || 0;
-    const proPart = Number(document.getElementById('newMealProPart').value) || 0;
-    const carb = Number(document.getElementById('newMealCarb').value) || 0;
-    const fat = Number(document.getElementById('newMealFat').value) || 0;
-
-    if (!name || cal <= 0) {
-      alert("אנא הזיני לפחות שם ארוחה וכמות קלוריות");
-      return;
+    function updateWeight() {
+        const val = parseFloat(document.getElementById('currentWeight').value);
+        if (val && val > 0) {
+            currentWeight = val;
+            localStorage.setItem('user_weight', currentWeight);
+            renderMilestones();
+            renderChartAndRatios();
+        }
     }
 
-    const presets = JSON.parse(localStorage.getItem('meal_presets')) || defaultPresets;
-    presets.push({ name, cal, proFull, proPart, carb, fat });
-    localStorage.setItem('meal_presets', JSON.stringify(presets));
+    function renderMilestones() {
+        const container = document.getElementById('milestonesContainer');
+        container.innerHTML = '';
 
-    document.getElementById('newMealName').value = '';
-    document.getElementById('newMealCal').value = '';
-    document.getElementById('newMealProFull').value = '';
-    document.getElementById('newMealProPart').value = '';
-    document.getElementById('newMealCarb').value = '';
-    document.getElementById('newMealFat').value = '';
-
-    loadPresets();
-    alert("הארוחה נוספה בהצלחה ללוג הקבוע!");
-  }
-
-  function loadRewards(curWeight) {
-    let rewards = JSON.parse(localStorage.getItem('rewards_list'));
-    if (!rewards) {
-      rewards = defaultRewards;
-      localStorage.setItem('rewards_list', JSON.stringify(rewards));
+        milestones.forEach(m => {
+            const isUnlocked = currentWeight <= m.target;
+            const div = document.createElement('div');
+            div.className = `milestone-item ${isUnlocked ? 'unlocked' : ''}`;
+            div.innerHTML = `
+                <div>
+                    <strong>${m.title}</strong>
+                    <div style="font-size: 0.85rem; color: var(--text-muted);">${m.desc}</div>
+                </div>
+                <div class="badge">${isUnlocked ? 'הושג! 🎯' : `${m.target} ק"ג`}</div>
+            `;
+            container.appendChild(div);
+        });
     }
 
-    const container = document.getElementById('rewardsContainer');
-    container.innerHTML = rewards.map((r, i) => {
-      const isUnlocked = curWeight <= r.target;
-      return `
-        <div class="reward-item ${isUnlocked ? 'unlocked' : ''}">
-          <div class="reward-header">
-            <span class="reward-weight">🎯 יעד: ${r.target} ק״ג</span>
-            <span style="font-size:0.75rem; font-weight:700; color:${isUnlocked ? 'var(--green)' : 'var(--subtext)'};">
-              ${isUnlocked ? '🔓 נפתח לביצוע! 🎉' : '🔒 ממתין למשקל'}
-            </span>
-          </div>
-          <span class="reward-desc">${r.desc}</span>
-        </div>
-      `;
-    }).join('');
-  }
-
-  function addCustomReward() {
-    const target = Number(document.getElementById('customRewWeight').value);
-    const desc = document.getElementById('customRewDesc').value.trim();
-    if (!target || !desc) return;
-
-    const rewards = JSON.parse(localStorage.getItem('rewards_list')) || defaultRewards;
-    rewards.push({ target, desc, done: false });
-    rewards.sort((a, b) => b.target - a.target);
-    localStorage.setItem('rewards_list', JSON.stringify(rewards));
-
-    document.getElementById('customRewWeight').value = '';
-    document.getElementById('customRewDesc').value = '';
-
-    const weights = JSON.parse(localStorage.getItem('weights') || '[]');
-    const curW = weights.length > 0 ? weights[weights.length - 1].val : 115.0;
-    loadRewards(curW);
-  }
-
-  function updateWeight() {
-    const val = Number(document.getElementById('newWeightInput').value);
-    if (!val) return;
-    const weights = JSON.parse(localStorage.getItem('weights') || '[]');
-    weights.push({ date: new Date().toLocaleDateString('he-IL'), val });
-    localStorage.setItem('weights', JSON.stringify(weights));
-    document.getElementById('newWeightInput').value = '';
-    loadDashboard();
-    if (typeof confetti === 'function') confetti({ particleCount: 60, spread: 60 });
-  }
-
-  function saveHabits() {
-    const states = [1,2,3,4,5].map(i => {
-      const el = document.getElementById('h' + i);
-      return el ? el.checked : false;
-    });
-    localStorage.setItem('habits_' + new Date().toDateString(), JSON.stringify(states));
-    loadDashboard();
-  }
-
-  function resetDay() {
-    if (confirm("לאפס את נתוני התזונה של היום?")) {
-      const todayKey = 'nutr_' + new Date().toDateString();
-      localStorage.setItem(todayKey, JSON.stringify({ cal: 0, proFull: 0, proPart: 0 }));
-      loadDashboard();
+    // חישוב 1RM לפי נוסחת Epley
+    function calculate1RM(weight, reps) {
+        if (reps === 1) return weight;
+        return Math.round(weight * (1 + reps / 30) * 10) / 10;
     }
-  }
 
-  function loadDashboard() {
-    const weights = JSON.parse(localStorage.getItem('weights') || '[]');
-    const curW = weights.length > 0 ? weights[weights.length - 1].val : 115.0;
-    document.getElementById('curWeight').innerText = curW + ' ק״ג';
-    const remain = Math.max(0, curW - 75.0).toFixed(1);
-    document.getElementById('remainWeight').innerText = remain + ' ק״ג';
+    function logLift() {
+        const date = document.getElementById('liftDate').value;
+        const exercise = document.getElementById('liftExercise').value;
+        const weight = parseFloat(document.getElementById('liftWeight').value);
+        const reps = parseInt(document.getElementById('liftReps').value, 10);
 
-    const totalToLose = 40.0;
-    const lost = Math.max(0, 115.0 - curW);
-    const pct = Math.min(100, Math.round((lost / totalToLose) * 100));
-    document.getElementById('pctDisplay').innerText = pct + '% הושלמו';
-    document.getElementById('targetBar').style.width = pct + '%';
+        if (!date || isNaN(weight) || isNaN(reps) || weight <= 0 || reps <= 0) {
+            alert('נא למלא את כל שדות האימון בצורה תקינה.');
+            return;
+        }
 
-    loadRewards(curW);
+        const estimated1RM = calculate1RM(weight, reps);
+        const newEntry = { id: Date.now(), date, exercise, weight, reps, estimated1RM };
 
-    const todayKey = 'nutr_' + new Date().toDateString();
-    const nutr = JSON.parse(localStorage.getItem(todayKey) || '{"cal":0,"proFull":0,"proPart":0}');
-    const totalPro = Math.round((nutr.proFull + nutr.proPart) * 10) / 10;
-    
-    document.getElementById('dayCal').innerText = nutr.cal;
-    document.getElementById('dayPro').innerText = totalPro + 'g';
-    document.getElementById('dayProFull').innerText = nutr.proFull + 'g';
-    document.getElementById('dayProPart').innerText = nutr.proPart + 'g';
+        strengthLogs.push(newEntry);
+        // מיון לפי תאריך
+        strengthLogs.sort((a, b) => new Date(a.date) - new Date(b.date));
+        localStorage.setItem('strength_logs', JSON.stringify(strengthLogs));
 
-    let score = 0;
-    if (nutr.cal > 0) {
-      const calDiff = Math.abs(nutr.cal - 1550);
-      if (calDiff <= 100) score += 40;
-      else if (calDiff <= 250) score += 30;
-      else if (calDiff <= 400) score += 20;
-      else score += 10;
+        // איפוס שדות משקל וחזרות
+        document.getElementById('liftWeight').value = '';
+        document.getElementById('liftReps').value = '';
+
+        renderLogsTable();
+        renderChartAndRatios();
     }
-    if (totalPro >= 140) score += 40;
-    else if (totalPro >= 110) score += 25;
-    else if (totalPro > 0) score += 15;
 
-    const habits = JSON.parse(localStorage.getItem('habits_' + new Date().toDateString()) || '[]');
-    const completedHabits = habits.filter(Boolean).length;
-    score += completedHabits * 4;
+    function deleteLog(id) {
+        strengthLogs = strengthLogs.filter(l => l.id !== id);
+        localStorage.setItem('strength_logs', JSON.stringify(strengthLogs));
+        renderLogsTable();
+        renderChartAndRatios();
+    }
 
-    document.getElementById('dailyScore').innerText = score;
+    function renderLogsTable() {
+        const tbody = document.getElementById('logsTableBody');
+        tbody.innerHTML = '';
 
-    habits.forEach((checked, i) => {
-      const el = document.getElementById('h' + (i + 1));
-      if (el) el.checked = checked;
-    });
-  }
+        // הצגה בסדר כרונולוגי יורד בטבלה
+        const reversed = [...strengthLogs].reverse();
+        reversed.forEach(log => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${log.date}</td>
+                <td>${log.exercise}</td>
+                <td>${log.weight} ק"ג</td>
+                <td>${log.reps}</td>
+                <td><strong>${log.estimated1RM} ק"ג</strong></td>
+                <td><button class="delete-btn" onclick="deleteLog(${log.id})">✕</button></td>
+            `;
+            tbody.appendChild(row);
+        });
+    }
 
-  window.onload = () => {
-    loadPresets();
-    loadDashboard();
-  };
+    function renderChartAndRatios() {
+        const currentExercise = document.getElementById('liftExercise').value;
+        const filteredLogs = strengthLogs.filter(l => l.exercise === currentExercise);
+
+        // חישוב יחס חוזק למשקל גוף (ה-1RM הכי גבוה בתרגיל חלקי משקל הגוף)
+        const exercises = ["Squat", "Bench Press", "Deadlift", "Overhead Press"];
+        const ratioContainer = document.getElementById('ratioSummary');
+        ratioContainer.innerHTML = '';
+
+        exercises.forEach(ex => {
+            const exLogs = strengthLogs.filter(l => l.exercise === ex);
+            let max1RM = 0;
+            if (exLogs.length > 0) {
+                max1RM = Math.max(...exLogs.map(l => l.estimated1RM));
+            }
+            const ratio = (currentWeight > 0 && max1RM > 0) ? (max1RM / currentWeight).toFixed(2) : '-';
+            
+            const card = document.createElement('div');
+            card.className = 'ratio-card';
+            card.innerHTML = `
+                <div class="ratio-title">${ex}</div>
+                <div class="ratio-value">${ratio !== '-' ? `x${ratio}` : '-'}</div>
+                <div style="font-size: 0.75rem; color: var(--text-muted);">${max1RM ? `${max1RM} ק"ג שיא` : 'אין נתונים'}</div>
+            `;
+            ratioContainer.appendChild(card);
+        });
+
+        // עדכון גרף
+        const ctx = document.getElementById('strengthChart').getContext('2d');
+        const labels = filteredLogs.map(l => l.date);
+        const data1RM = filteredLogs.map(l => l.estimated1RM);
+        const dataWeight = filteredLogs.map(l => l.weight);
+
+        if (chartInstance) {
+            chartInstance.destroy();
+        }
+
+        chartInstance = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: `1RM משוער (${currentExercise})`,
+                        data: data1RM,
+                        borderColor: '#4f46e5',
+                        backgroundColor: 'rgba(79, 70, 229, 0.1)',
+                        tension: 0.2,
+                        fill: true
+                    },
+                    {
+                        label: `משקל עבודה בפועל`,
+                        data: dataWeight,
+                        borderColor: '#94a3b8',
+                        borderDash: [5, 5],
+                        tension: 0.2,
+                        fill: false
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        title: { display: true, text: 'משקל (ק"ג)' },
+                        beginAtZero: false
+                    }
+                }
+            }
+        });
+    }
+
+    // אתחול ראשוני
+    renderMilestones();
+    renderLogsTable();
+    renderChartAndRatios();
 </script>
 
 </body>
