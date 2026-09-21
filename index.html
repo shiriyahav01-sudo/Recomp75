@@ -226,23 +226,73 @@
             margin: 0;
         }
 
-        /* פריסטים מהירים לארוחות */
-        .preset-badge {
-            background: #161d2f;
-            border: 1px solid var(--card-border);
-            color: #cbd5e1;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            cursor: pointer;
-            display: inline-block;
-            margin: 4px;
-            transition: all 0.2s;
+        /* כרטיסיות מתכונים ופריסטים */
+        .recipes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 10px;
+            margin-bottom: 16px;
         }
 
-        .preset-badge:hover {
+        .recipe-card {
+            background: #070a12;
+            border: 1px solid var(--card-border);
+            border-radius: 10px;
+            padding: 10px 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+        }
+
+        .recipe-card:hover {
             border-color: var(--accent-cyan);
+            background: #0e1424;
+            transform: translateY(-2px);
+        }
+
+        .recipe-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 4px;
+        }
+
+        .recipe-title {
+            font-weight: 700;
+            font-size: 0.92rem;
             color: #fff;
+        }
+
+        .recipe-ingredients {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            line-height: 1.35;
+            margin: 4px 0 8px 0;
+        }
+
+        .recipe-meta {
+            display: flex;
+            gap: 8px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .recipe-cal { color: var(--accent-cyan); }
+        .recipe-prot { color: var(--accent-pink); }
+
+        .recipe-del {
+            color: #ef4444;
+            font-size: 0.95rem;
+            font-weight: bold;
+            cursor: pointer;
+            padding: 0 4px;
+        }
+
+        .recipe-del:hover {
+            color: #f87171;
         }
 
         /* מודאל פופ-אפ חגיגי */
@@ -371,7 +421,7 @@
         </table>
     </div>
 
-    <!-- 4. מחשבון ארוחות, קלוריות וחלבון יומי (כולל פריסטים מהירים) -->
+    <!-- 4. מחשבון ארוחות, קלוריות וחלבון יומי + מאגר מתכונים/פריסטים עם רכיבים -->
     <div class="card">
         <h2>🥗 לוג ומחשבון תזונה יומי</h2>
         
@@ -386,19 +436,31 @@
             </div>
         </div>
 
-        <label>הוספה מהירה מתוך פריסטים:</label>
-        <div style="margin-bottom: 14px;">
-            <span class="preset-badge" onclick="applyPreset('שייק חלבון / סקופ', 130, 25)">+ שייק חלבון (130 קק״ל, 25ג חלבון)</span>
-            <span class="preset-badge" onclick="applyPreset('שיבולת שועל + חלבון', 380, 35)">+ שיבולת שועל וחלבון (380 קק״ל, 35ג חלבון)</span>
-            <span class="preset-badge" onclick="applyPreset('חזה עוף / פסטרמה ביתית (150ג)', 220, 42)">+ חזה עוף/הודו 150ג (220 קק״ל, 42ג חלבון)</span>
-            <span class="preset-badge" onclick="applyPreset('קוטג׳ / גבינה לבנה (גביע)', 190, 25)">+ גביע קוטג׳ (190 קק״ל, 25ג חלבון)</span>
-            <span class="preset-badge" onclick="applyPreset('2 ביצים + סלט', 210, 14)">+ 2 ביצים וסלט (210 קק״ל, 14ג חלבון)</span>
+        <!-- כפתורי שליפה מהירה + הוספת מתכון/פריסט חדש -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <label style="margin: 0;">בחירת מתכון / פריסט מוכן:</label>
+            <button class="btn-secondary" onclick="toggleNewPresetBox()" style="width: auto; padding: 4px 10px; font-size: 0.8rem;">+ הוסף מתכון/פריסט חדש</button>
+        </div>
+        
+        <!-- טופס הוספת מתכון/פריסט חדש -->
+        <div id="newPresetBox" style="display: none; background: #05070a; border: 1px dashed var(--card-border); border-radius: 10px; padding: 14px; margin-bottom: 16px;">
+            <div class="grid-3" style="margin-bottom: 8px;">
+                <input type="text" id="presetNewName" placeholder="שם המנה (למשל: מוקפץ טופו ושעועית)">
+                <input type="number" id="presetNewCals" placeholder="קלוריות (קק״ל)">
+                <input type="number" id="presetNewProt" placeholder="חלבון (גרם)">
+            </div>
+            <input type="text" id="presetNewIngredients" placeholder="תקציר רכיבים (למשל: 300ג שעועית ירוקה, כף שמן זית, חצי חבילת טופו)" style="margin-bottom: 8px;">
+            <button onclick="saveCustomPreset()" style="padding: 8px; font-size: 0.85rem;">שמור מתכון למאגר</button>
         </div>
 
+        <!-- תצוגת כרטיסיות מתכונים עם רכיבים -->
+        <div id="presetsContainer" class="recipes-grid"></div>
+
+        <!-- טופס הזנת ארוחה ליומן -->
         <div class="grid-3">
             <div>
-                <label for="mealName">שם פריט / ארוחה:</label>
-                <input type="text" id="mealName" placeholder="הזנה חופשית...">
+                <label for="mealName">שם פריט / ארוחה שנבחרה:</label>
+                <input type="text" id="mealName" placeholder="הזנה חופשית או בחירה ממתכון...">
             </div>
             <div>
                 <label for="mealCals">קלוריות (kcal):</label>
@@ -462,10 +524,39 @@
         "שינה איכותית והתאוששות"
     ];
 
+    // פריסטים ראשוניים עם תקצירי רכיבים
+    const initialPresets = [
+        { 
+            name: "מוקפץ טופו ושעועית ירוקה", 
+            ingredients: "300ג שעועית ירוקה, כף שמן זית, 150ג טופו, סויה", 
+            cals: 360, 
+            prot: 28 
+        },
+        { 
+            name: "שיבולת שועל וחלבון", 
+            ingredients: "50ג שיבולת שועל, סקופ אבקת חלבון, מים/חלב שקדים, קינמון", 
+            cals: 380, 
+            prot: 35 
+        },
+        { 
+            name: "חזה עוף / פסטרמה ביתית", 
+            ingredients: "150ג חזה עוף/הודו צלוי בתבלינים", 
+            cals: 220, 
+            prot: 42 
+        },
+        { 
+            name: "קוטג׳ / גבינה לבנה וירקות", 
+            ingredients: "גביע קוטג׳ 5% (250ג), מלפפון, עגבנייה", 
+            cals: 215, 
+            prot: 28 
+        }
+    ];
+
     // שליפת נתונים מ-localStorage
     let currentWeight = parseFloat(localStorage.getItem('user_weight')) || 115;
     let strengthLogs = JSON.parse(localStorage.getItem('strength_logs')) || [];
     let mealsLogs = JSON.parse(localStorage.getItem('daily_meals_logs')) || [];
+    let customPresets = JSON.parse(localStorage.getItem('custom_meal_presets')) || initialPresets;
     let checkedHabits = JSON.parse(localStorage.getItem('checked_habits')) || {};
     let celebratedTargets = JSON.parse(localStorage.getItem('celebrated_targets')) || [];
     let chartInstance = null;
@@ -473,7 +564,7 @@
     document.getElementById('currentWeight').value = currentWeight;
     document.getElementById('liftDate').valueAsDate = new Date();
 
-    // 1. עדכון משקל וחישוב פופ-אפ תגמול
+    // 1. משקל וסרגל התקדמות
     function updateWeight() {
         const val = parseFloat(document.getElementById('currentWeight').value);
         if (val && val > 0) {
@@ -547,7 +638,7 @@
         renderHabits();
     }
 
-    // 3. אימוני כוח, מתח עם עזרה, יחסי כוח וגרף
+    // 3. אימונים, מתח עם עזרה, יחסי כוח וגרף
     function handleExerciseChange() {
         const ex = document.getElementById('liftExercise').value;
         const label = document.getElementById('liftWeightLabel');
@@ -654,7 +745,6 @@
             ratioContainer.appendChild(card);
         });
 
-        // עדכון גרף
         const ctx = document.getElementById('strengthChart').getContext('2d');
         if (chartInstance) chartInstance.destroy();
 
@@ -689,11 +779,77 @@
         });
     }
 
-    // 4. לוג ומחשבון ארוחות
-    function applyPreset(name, cals, prot) {
-        document.getElementById('mealName').value = name;
-        document.getElementById('mealCals').value = cals;
-        document.getElementById('mealProt').value = prot;
+    // 4. ניהול מתכונים ופריסטים
+    function toggleNewPresetBox() {
+        const box = document.getElementById('newPresetBox');
+        box.style.display = box.style.display === 'none' ? 'block' : 'none';
+    }
+
+    function saveCustomPreset() {
+        const name = document.getElementById('presetNewName').value.trim();
+        const ingredients = document.getElementById('presetNewIngredients').value.trim();
+        const cals = parseInt(document.getElementById('presetNewCals').value, 10);
+        const prot = parseInt(document.getElementById('presetNewProt').value, 10) || 0;
+
+        if (!name || isNaN(cals) || cals <= 0) {
+            alert('נא למלא שם מתכון ומספר קלוריות.');
+            return;
+        }
+
+        customPresets.push({ name, ingredients, cals, prot });
+        localStorage.setItem('custom_meal_presets', JSON.stringify(customPresets));
+
+        document.getElementById('presetNewName').value = '';
+        document.getElementById('presetNewIngredients').value = '';
+        document.getElementById('presetNewCals').value = '';
+        document.getElementById('presetNewProt').value = '';
+        toggleNewPresetBox();
+
+        renderPresets();
+    }
+
+    function deletePreset(index, event) {
+        event.stopPropagation();
+        if (confirm('למחוק מתכון זה ממאגר הפריסטים?')) {
+            customPresets.splice(index, 1);
+            localStorage.setItem('custom_meal_presets', JSON.stringify(customPresets));
+            renderPresets();
+        }
+    }
+
+    function renderPresets() {
+        const container = document.getElementById('presetsContainer');
+        container.innerHTML = '';
+
+        customPresets.forEach((p, idx) => {
+            const card = document.createElement('div');
+            card.className = 'recipe-card';
+            card.onclick = () => selectRecipe(p);
+            
+            const ingText = p.ingredients ? p.ingredients : 'ללא פירוט רכיבים';
+
+            card.innerHTML = `
+                <div>
+                    <div class="recipe-header">
+                        <span class="recipe-title">${p.name}</span>
+                        <span class="recipe-del" onclick="deletePreset(${idx}, event)" title="מחק">✕</span>
+                    </div>
+                    <div class="recipe-ingredients">${ingText}</div>
+                </div>
+                <div class="recipe-meta">
+                    <span class="recipe-cal">${p.cals} kcal</span>
+                    <span>•</span>
+                    <span class="recipe-prot">${p.prot}g חלבון</span>
+                </div>
+            `;
+            container.appendChild(card);
+        });
+    }
+
+    function selectRecipe(p) {
+        document.getElementById('mealName').value = p.ingredients ? `${p.name} (${p.ingredients})` : p.name;
+        document.getElementById('mealCals').value = p.cals;
+        document.getElementById('mealProt').value = p.prot;
     }
 
     function addMeal() {
@@ -759,6 +915,7 @@
     renderHabits();
     renderStrengthLogs();
     renderChartAndRatios();
+    renderPresets();
     renderMeals();
 </script>
 
