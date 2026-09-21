@@ -8,49 +8,76 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
-            --bg-color: #f8fafc;
-            --card-bg: #ffffff;
-            --primary: #4f46e5;
-            --primary-hover: #4338ca;
-            --text-main: #1e293b;
-            --text-muted: #64748b;
-            --border: #e2e8f0;
-            --success: #10b981;
+            --bg-base: #0b0f19;
+            --card-bg: rgba(22, 30, 49, 0.75);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --accent-purple: #8b5cf6;
+            --accent-pink: #ec4899;
+            --accent-cyan: #06b6d4;
+            --accent-green: #10b981;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --input-bg: rgba(15, 23, 42, 0.85);
+            --border-glow: rgba(139, 92, 246, 0.25);
         }
 
         body {
             font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background-color: var(--bg-color);
+            background: radial-gradient(circle at 15% 15%, #1e1b4b 0%, #0b0f19 50%, #05050a 100%);
+            background-attachment: fixed;
             color: var(--text-main);
             margin: 0;
-            padding: 24px 16px;
+            padding: 32px 16px;
             display: flex;
             justify-content: center;
+            min-height: 100vh;
         }
 
         .container {
             width: 100%;
-            max-width: 900px;
+            max-width: 920px;
             display: flex;
             flex-direction: column;
             gap: 24px;
         }
 
         .card {
-            background-color: var(--card-bg);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 20px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            background: var(--card-bg);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            left: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent-purple), var(--accent-pink), transparent);
+            opacity: 0.6;
         }
 
         h2 {
             margin-top: 0;
-            margin-bottom: 16px;
-            font-size: 1.25rem;
-            color: var(--text-main);
-            border-bottom: 2px solid var(--border);
-            padding-bottom: 8px;
+            margin-bottom: 20px;
+            font-size: 1.3rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: linear-gradient(90deg, #fff, var(--text-muted));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+            padding-bottom: 12px;
         }
 
         .grid-2 {
@@ -65,32 +92,48 @@
 
         label {
             display: block;
-            font-size: 0.875rem;
-            font-weight: 600;
-            margin-bottom: 6px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            margin-bottom: 8px;
         }
 
-        input, select, button {
+        input, select {
             width: 100%;
-            padding: 10px;
-            border-radius: 8px;
-            border: 1px solid var(--border);
+            padding: 12px 14px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            background-color: var(--input-bg);
+            color: #fff;
             box-sizing: border-box;
             font-size: 1rem;
+            outline: none;
+            transition: all 0.25s ease;
+        }
+
+        input:focus, select:focus {
+            border-color: var(--accent-purple);
+            box-shadow: 0 0 12px var(--border-glow);
         }
 
         button {
-            background-color: var(--primary);
-            color: white;
+            width: 100%;
+            padding: 13px;
+            border-radius: 10px;
             border: none;
-            font-weight: 600;
+            font-weight: 700;
+            font-size: 1rem;
             cursor: pointer;
-            transition: background-color 0.2s;
-            margin-top: 8px;
+            background: linear-gradient(135deg, var(--accent-purple) 0%, var(--accent-pink) 100%);
+            color: white;
+            box-shadow: 0 4px 20px rgba(139, 92, 246, 0.35);
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 10px;
         }
 
         button:hover {
-            background-color: var(--primary-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 24px rgba(236, 72, 153, 0.45);
         }
 
         /* סולם התגמולים */
@@ -98,81 +141,136 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 12px 16px;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            margin-bottom: 10px;
-            background: #fff;
+            padding: 16px 20px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 12px;
+            margin-bottom: 12px;
+            background: rgba(15, 23, 42, 0.5);
+            transition: all 0.25s;
+        }
+
+        .milestone-item:hover {
+            background: rgba(30, 41, 59, 0.7);
+            border-color: rgba(255, 255, 255, 0.15);
         }
 
         .milestone-item.unlocked {
-            border-color: var(--success);
-            background-color: #ecfdf5;
+            border-color: var(--accent-green);
+            background: rgba(16, 185, 129, 0.1);
+            box-shadow: inset 0 0 15px rgba(16, 185, 129, 0.15);
+        }
+
+        .milestone-info strong {
+            font-size: 1.05rem;
+            color: #fff;
+            display: block;
+        }
+
+        .milestone-info span {
+            font-size: 0.85rem;
+            color: var(--text-muted);
         }
 
         .badge {
-            background-color: var(--border);
-            color: var(--text-main);
-            padding: 4px 10px;
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--accent-cyan);
+            border: 1px solid rgba(6, 182, 212, 0.3);
+            padding: 6px 14px;
             border-radius: 20px;
-            font-weight: bold;
-            font-size: 0.875rem;
+            font-weight: 700;
+            font-size: 0.9rem;
         }
 
         .milestone-item.unlocked .badge {
-            background-color: var(--success);
-            color: white;
+            background: var(--accent-green);
+            color: #042f2e;
+            border-color: var(--accent-green);
+            box-shadow: 0 0 12px rgba(16, 185, 129, 0.4);
         }
 
-        /* מדדי יחס כוח */
+        /* כרטיסי יחס כוח */
         .ratio-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-            gap: 12px;
-            margin-top: 12px;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 14px;
+            margin-top: 14px;
         }
 
         .ratio-card {
-            background-color: #f1f5f9;
-            border-radius: 8px;
-            padding: 12px;
+            background: rgba(15, 23, 42, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 12px;
+            padding: 16px;
             text-align: center;
+            transition: transform 0.2s;
+        }
+
+        .ratio-card:hover {
+            transform: translateY(-3px);
+            border-color: var(--accent-purple);
         }
 
         .ratio-title {
             font-size: 0.8rem;
             color: var(--text-muted);
-            margin-bottom: 4px;
+            margin-bottom: 6px;
+            font-weight: 500;
         }
 
         .ratio-value {
-            font-size: 1.25rem;
-            font-weight: bold;
-            color: var(--primary);
+            font-size: 1.4rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .ratio-sub {
+            font-size: 0.75rem;
+            color: #64748b;
+            margin-top: 4px;
         }
 
         /* היסטוריית סטים */
         .log-table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 12px;
-            font-size: 0.9rem;
+            margin-top: 16px;
+            font-size: 0.92rem;
         }
 
-        .log-table th, .log-table td {
-            border-bottom: 1px solid var(--border);
-            padding: 8px 4px;
+        .log-table th {
+            color: var(--text-muted);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 10px 8px;
             text-align: right;
+            font-weight: 600;
+        }
+
+        .log-table td {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 12px 8px;
+            text-align: right;
+            color: #cbd5e1;
         }
 
         .delete-btn {
             background: none;
             border: none;
-            color: #ef4444;
+            color: #f43f5e;
             cursor: pointer;
             padding: 0;
             width: auto;
-            font-size: 1rem;
+            font-size: 1.1rem;
+            box-shadow: none;
+            margin: 0;
+            transition: transform 0.2s;
+        }
+
+        .delete-btn:hover {
+            transform: scale(1.2);
+            color: #fb7185;
+            box-shadow: none;
         }
     </style>
 </head>
@@ -182,8 +280,8 @@
 
     <!-- עדכון משקל נוכחי -->
     <div class="card">
-        <h2>משקל גוף נוכחי</h2>
-        <div style="display: flex; gap: 12px; align-items: flex-end;">
+        <h2>⚡ משקל גוף נוכחי</h2>
+        <div style="display: flex; gap: 14px; align-items: flex-end;">
             <div style="flex: 1;">
                 <label for="currentWeight">משקל עדכני (ק"ג):</label>
                 <input type="number" id="currentWeight" step="0.1" placeholder="115">
@@ -196,13 +294,13 @@
 
     <!-- סולם התגמולים המאושר -->
     <div class="card">
-        <h2>סולם התגמולים והיעדים</h2>
+        <h2>🎯 סולם התגמולים והיעדים</h2>
         <div id="milestonesContainer"></div>
     </div>
 
     <!-- מעקב כוח דינמי לפי אימון -->
     <div class="card">
-        <h2>תיעוד אימון כוח דינמי</h2>
+        <h2>🏋️‍♀️ תיעוד אימון כוח דינמי</h2>
         <div class="grid-2">
             <div>
                 <label for="liftDate">תאריך:</label>
@@ -231,18 +329,16 @@
 
     <!-- גרף התקדמות ויחס חוזק למשקל גוף -->
     <div class="card">
-        <h2>התקדמות ויחס כוח למסת גוף</h2>
-        <div class="ratio-grid" id="ratioSummary">
-            <!-- מחושב דינמית -->
-        </div>
-        <div style="margin-top: 24px; position: relative; height: 300px;">
+        <h2>📊 יחס כוח למסת גוף וגרף ביצועים</h2>
+        <div class="ratio-grid" id="ratioSummary"></div>
+        <div style="margin-top: 24px; position: relative; height: 320px;">
             <canvas id="strengthChart"></canvas>
         </div>
     </div>
 
     <!-- היסטוריית רישומים -->
     <div class="card">
-        <h2>היסטוריית אימונים רשומים</h2>
+        <h2>📜 היסטוריית אימונים</h2>
         <table class="log-table">
             <thead>
                 <tr>
@@ -261,7 +357,7 @@
 </div>
 
 <script>
-    // הגדרת סולם התגמולים המאושר בלבד
+    // סולם התגמולים המאושר בלבד
     const milestones = [
         { target: 95, title: "קיר טיפוס / בולדרינג", desc: "טיפוס זורם וקליל עם יחס כוח-משקל משופר" },
         { target: 90, title: "FlyBox (מנהרת רוח)", desc: "ריחוף יציב וחלק בזרם האוויר" },
@@ -271,7 +367,6 @@
         { target: 75, title: "סדנת אקרובטיקה ועמידות ידיים", desc: "שליטה מלאה במשקל הגוף על מזרן" }
     ];
 
-    // שליפת נתונים מ-localStorage
     let currentWeight = parseFloat(localStorage.getItem('user_weight')) || 115;
     let strengthLogs = JSON.parse(localStorage.getItem('strength_logs')) || [];
     let chartInstance = null;
@@ -298,9 +393,9 @@
             const div = document.createElement('div');
             div.className = `milestone-item ${isUnlocked ? 'unlocked' : ''}`;
             div.innerHTML = `
-                <div>
+                <div class="milestone-info">
                     <strong>${m.title}</strong>
-                    <div style="font-size: 0.85rem; color: var(--text-muted);">${m.desc}</div>
+                    <span>${m.desc}</span>
                 </div>
                 <div class="badge">${isUnlocked ? 'הושג! 🎯' : `${m.target} ק"ג`}</div>
             `;
@@ -308,7 +403,6 @@
         });
     }
 
-    // חישוב 1RM לפי נוסחת Epley
     function calculate1RM(weight, reps) {
         if (reps === 1) return weight;
         return Math.round(weight * (1 + reps / 30) * 10) / 10;
@@ -329,11 +423,9 @@
         const newEntry = { id: Date.now(), date, exercise, weight, reps, estimated1RM };
 
         strengthLogs.push(newEntry);
-        // מיון לפי תאריך
         strengthLogs.sort((a, b) => new Date(a.date) - new Date(b.date));
         localStorage.setItem('strength_logs', JSON.stringify(strengthLogs));
 
-        // איפוס שדות משקל וחזרות
         document.getElementById('liftWeight').value = '';
         document.getElementById('liftReps').value = '';
 
@@ -352,7 +444,6 @@
         const tbody = document.getElementById('logsTableBody');
         tbody.innerHTML = '';
 
-        // הצגה בסדר כרונולוגי יורד בטבלה
         const reversed = [...strengthLogs].reverse();
         reversed.forEach(log => {
             const row = document.createElement('tr');
@@ -361,7 +452,7 @@
                 <td>${log.exercise}</td>
                 <td>${log.weight} ק"ג</td>
                 <td>${log.reps}</td>
-                <td><strong>${log.estimated1RM} ק"ג</strong></td>
+                <td><strong style="color: var(--accent-cyan);">${log.estimated1RM} ק"ג</strong></td>
                 <td><button class="delete-btn" onclick="deleteLog(${log.id})">✕</button></td>
             `;
             tbody.appendChild(row);
@@ -372,7 +463,6 @@
         const currentExercise = document.getElementById('liftExercise').value;
         const filteredLogs = strengthLogs.filter(l => l.exercise === currentExercise);
 
-        // חישוב יחס חוזק למשקל גוף (ה-1RM הכי גבוה בתרגיל חלקי משקל הגוף)
         const exercises = ["Squat", "Bench Press", "Deadlift", "Overhead Press"];
         const ratioContainer = document.getElementById('ratioSummary');
         ratioContainer.innerHTML = '';
@@ -390,12 +480,11 @@
             card.innerHTML = `
                 <div class="ratio-title">${ex}</div>
                 <div class="ratio-value">${ratio !== '-' ? `x${ratio}` : '-'}</div>
-                <div style="font-size: 0.75rem; color: var(--text-muted);">${max1RM ? `${max1RM} ק"ג שיא` : 'אין נתונים'}</div>
+                <div class="ratio-sub">${max1RM ? `${max1RM} ק"ג שיא` : 'אין נתונים'}</div>
             `;
             ratioContainer.appendChild(card);
         });
 
-        // עדכון גרף
         const ctx = document.getElementById('strengthChart').getContext('2d');
         const labels = filteredLogs.map(l => l.date);
         const data1RM = filteredLogs.map(l => l.estimated1RM);
@@ -405,6 +494,11 @@
             chartInstance.destroy();
         }
 
+        // יצירת גרדיאנט זוהר לקו ה-1RM בגרף
+        const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+        gradient.addColorStop(0, 'rgba(139, 92, 246, 0.45)');
+        gradient.addColorStop(1, 'rgba(139, 92, 246, 0.0)');
+
         chartInstance = new Chart(ctx, {
             type: 'line',
             data: {
@@ -413,17 +507,24 @@
                     {
                         label: `1RM משוער (${currentExercise})`,
                         data: data1RM,
-                        borderColor: '#4f46e5',
-                        backgroundColor: 'rgba(79, 70, 229, 0.1)',
-                        tension: 0.2,
+                        borderColor: '#a855f7',
+                        backgroundColor: gradient,
+                        borderWidth: 3,
+                        pointBackgroundColor: '#ec4899',
+                        pointBorderColor: '#fff',
+                        pointRadius: 5,
+                        pointHoverRadius: 7,
+                        tension: 0.3,
                         fill: true
                     },
                     {
                         label: `משקל עבודה בפועל`,
                         data: dataWeight,
-                        borderColor: '#94a3b8',
+                        borderColor: '#38bdf8',
                         borderDash: [5, 5],
-                        tension: 0.2,
+                        borderWidth: 2,
+                        pointRadius: 3,
+                        tension: 0.3,
                         fill: false
                     }
                 ]
@@ -431,9 +532,23 @@
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: '#94a3b8',
+                            font: { family: 'system-ui', size: 12 }
+                        }
+                    }
+                },
                 scales: {
+                    x: {
+                        grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                        ticks: { color: '#64748b' }
+                    },
                     y: {
-                        title: { display: true, text: 'משקל (ק"ג)' },
+                        title: { display: true, text: 'משקל (ק"ג)', color: '#94a3b8' },
+                        grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                        ticks: { color: '#64748b' },
                         beginAtZero: false
                     }
                 }
@@ -441,7 +556,6 @@
         });
     }
 
-    // אתחול ראשוני
     renderMilestones();
     renderLogsTable();
     renderChartAndRatios();
