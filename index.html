@@ -3,31 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>דשבורד מעקב ואימונים</title>
+    <title>דשבורד כושר, תזונה ויעדים</title>
     <!-- Chart.js לגרפים דינמיים -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Canvas Confetti לחגיגת השגת יעדים -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
         :root {
-            --bg-base: #0b0f19;
-            --card-bg: rgba(22, 30, 49, 0.75);
-            --card-border: rgba(255, 255, 255, 0.08);
-            --accent-purple: #8b5cf6;
+            --bg-pure-black: #000000;
+            --card-bg: #0d0f14;
+            --card-border: #1e2433;
+            --accent-purple: #a855f7;
             --accent-pink: #ec4899;
             --accent-cyan: #06b6d4;
             --accent-green: #10b981;
+            --accent-orange: #f59e0b;
             --text-main: #f8fafc;
             --text-muted: #94a3b8;
-            --input-bg: rgba(15, 23, 42, 0.85);
-            --border-glow: rgba(139, 92, 246, 0.25);
+            --input-bg: #05070a;
+            --border-glow: rgba(168, 85, 247, 0.4);
         }
 
         body {
             font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background: radial-gradient(circle at 15% 15%, #1e1b4b 0%, #0b0f19 50%, #05050a 100%);
-            background-attachment: fixed;
+            background-color: var(--bg-pure-black);
             color: var(--text-main);
             margin: 0;
-            padding: 32px 16px;
+            padding: 24px 16px;
             display: flex;
             justify-content: center;
             min-height: 100vh;
@@ -42,13 +44,11 @@
         }
 
         .card {
-            background: var(--card-bg);
-            backdrop-filter: blur(14px);
-            -webkit-backdrop-filter: blur(14px);
+            background-color: var(--card-bg);
             border: 1px solid var(--card-border);
             border-radius: 16px;
-            padding: 24px;
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            padding: 22px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.8);
             position: relative;
             overflow: hidden;
         }
@@ -61,216 +61,290 @@
             left: 0;
             height: 2px;
             background: linear-gradient(90deg, transparent, var(--accent-purple), var(--accent-pink), transparent);
-            opacity: 0.6;
+            opacity: 0.7;
         }
 
         h2 {
             margin-top: 0;
-            margin-bottom: 20px;
-            font-size: 1.3rem;
+            margin-bottom: 18px;
+            font-size: 1.25rem;
             font-weight: 700;
-            letter-spacing: -0.5px;
             display: flex;
             align-items: center;
             gap: 10px;
-            background: linear-gradient(90deg, #fff, var(--text-muted));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+            color: #fff;
+            border-bottom: 1px solid var(--card-border);
             padding-bottom: 12px;
         }
 
         .grid-2 {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 16px;
+            gap: 14px;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 14px;
         }
 
         @media (max-width: 640px) {
-            .grid-2 { grid-template-columns: 1fr; }
+            .grid-2, .grid-3 { grid-template-columns: 1fr; }
         }
 
         label {
             display: block;
-            font-size: 0.85rem;
-            font-weight: 500;
+            font-size: 0.82rem;
+            font-weight: 600;
             color: var(--text-muted);
-            margin-bottom: 8px;
+            margin-bottom: 6px;
         }
 
-        input, select {
+        input, select, textarea {
             width: 100%;
             padding: 12px 14px;
             border-radius: 10px;
-            border: 1px solid rgba(255, 255, 255, 0.12);
+            border: 1px solid var(--card-border);
             background-color: var(--input-bg);
             color: #fff;
             box-sizing: border-box;
-            font-size: 1rem;
+            font-size: 0.95rem;
             outline: none;
-            transition: all 0.25s ease;
+            transition: border-color 0.2s, box-shadow 0.2s;
         }
 
-        input:focus, select:focus {
+        input:focus, select:focus, textarea:focus {
             border-color: var(--accent-purple);
-            box-shadow: 0 0 12px var(--border-glow);
+            box-shadow: 0 0 10px var(--border-glow);
         }
 
         button {
             width: 100%;
-            padding: 13px;
+            padding: 12px;
             border-radius: 10px;
             border: none;
             font-weight: 700;
-            font-size: 1rem;
+            font-size: 0.95rem;
             cursor: pointer;
             background: linear-gradient(135deg, var(--accent-purple) 0%, var(--accent-pink) 100%);
             color: white;
-            box-shadow: 0 4px 20px rgba(139, 92, 246, 0.35);
-            transition: transform 0.2s, box-shadow 0.2s;
-            margin-top: 10px;
+            box-shadow: 0 4px 15px rgba(168, 85, 247, 0.3);
+            transition: transform 0.15s, box-shadow 0.15s;
+            margin-top: 8px;
         }
 
         button:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 24px rgba(236, 72, 153, 0.45);
+            box-shadow: 0 6px 20px rgba(236, 72, 153, 0.4);
         }
 
-        /* סולם התגמולים */
+        /* פס התקדמות משקל באחוזים */
+        .progress-wrapper {
+            margin-top: 16px;
+            background: #05070a;
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 16px;
+        }
+
+        .progress-bar-bg {
+            background: #1e2433;
+            height: 18px;
+            border-radius: 9px;
+            overflow: hidden;
+            position: relative;
+            margin: 10px 0;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-cyan), var(--accent-purple), var(--accent-pink));
+            border-radius: 9px;
+            width: 0%;
+            transition: width 0.8s ease-in-out;
+            box-shadow: 0 0 12px rgba(236, 72, 153, 0.5);
+        }
+
+        .progress-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        /* סולם תגמולים אינטראקטיבי עם Countdown */
         .milestone-item {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 16px 20px;
-            border: 1px solid rgba(255, 255, 255, 0.06);
+            padding: 14px 18px;
+            border: 1px solid var(--card-border);
             border-radius: 12px;
-            margin-bottom: 12px;
-            background: rgba(15, 23, 42, 0.5);
+            margin-bottom: 10px;
+            background: #05070a;
             transition: all 0.25s;
-        }
-
-        .milestone-item:hover {
-            background: rgba(30, 41, 59, 0.7);
-            border-color: rgba(255, 255, 255, 0.15);
         }
 
         .milestone-item.unlocked {
             border-color: var(--accent-green);
-            background: rgba(16, 185, 129, 0.1);
-            box-shadow: inset 0 0 15px rgba(16, 185, 129, 0.15);
+            background: rgba(16, 185, 129, 0.08);
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.15);
         }
 
         .milestone-info strong {
-            font-size: 1.05rem;
+            font-size: 1rem;
             color: #fff;
             display: block;
         }
 
         .milestone-info span {
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             color: var(--text-muted);
         }
 
-        .badge {
-            background: rgba(255, 255, 255, 0.08);
-            color: var(--accent-cyan);
-            border: 1px solid rgba(6, 182, 212, 0.3);
-            padding: 6px 14px;
-            border-radius: 20px;
+        .countdown-badge {
+            font-size: 0.85rem;
             font-weight: 700;
-            font-size: 0.9rem;
+            padding: 6px 12px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
 
-        .milestone-item.unlocked .badge {
+        .countdown-badge.pending {
+            background: rgba(245, 158, 11, 0.15);
+            color: var(--accent-orange);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+
+        .countdown-badge.done {
             background: var(--accent-green);
-            color: #042f2e;
-            border-color: var(--accent-green);
-            box-shadow: 0 0 12px rgba(16, 185, 129, 0.4);
+            color: #000;
+            box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
         }
 
-        /* כרטיסי יחס כוח */
+        /* מודאל חגיגת הישג */
+        .celebration-banner {
+            display: none;
+            background: linear-gradient(135deg, rgba(168, 85, 247, 0.25), rgba(236, 72, 153, 0.25));
+            border: 2px solid var(--accent-pink);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+            text-align: center;
+            animation: pulse 1.5s infinite alternate;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 10px rgba(236, 72, 153, 0.3); }
+            100% { box-shadow: 0 0 25px rgba(236, 72, 153, 0.7); }
+        }
+
+        /* יחס כוח */
         .ratio-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-            gap: 14px;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 12px;
             margin-top: 14px;
         }
 
         .ratio-card {
-            background: rgba(15, 23, 42, 0.7);
-            border: 1px solid rgba(255, 255, 255, 0.06);
-            border-radius: 12px;
-            padding: 16px;
+            background: #05070a;
+            border: 1px solid var(--card-border);
+            border-radius: 10px;
+            padding: 14px;
             text-align: center;
-            transition: transform 0.2s;
-        }
-
-        .ratio-card:hover {
-            transform: translateY(-3px);
-            border-color: var(--accent-purple);
         }
 
         .ratio-title {
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             color: var(--text-muted);
-            margin-bottom: 6px;
-            font-weight: 500;
+            margin-bottom: 4px;
         }
 
         .ratio-value {
-            font-size: 1.4rem;
+            font-size: 1.3rem;
             font-weight: 800;
             background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
 
-        .ratio-sub {
-            font-size: 0.75rem;
-            color: #64748b;
-            margin-top: 4px;
+        /* שגרת מתיחות וגמישות */
+        .stretch-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 14px;
+            background: #05070a;
+            border: 1px solid var(--card-border);
+            border-radius: 8px;
+            margin-bottom: 8px;
         }
 
-        /* היסטוריית סטים */
+        .stretch-item input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            accent-color: var(--accent-purple);
+        }
+
+        /* לוגים וטבלאות */
         .log-table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 16px;
-            font-size: 0.92rem;
+            margin-top: 14px;
+            font-size: 0.88rem;
         }
 
         .log-table th {
             color: var(--text-muted);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            padding: 10px 8px;
+            border-bottom: 1px solid var(--card-border);
+            padding: 10px 6px;
             text-align: right;
-            font-weight: 600;
         }
 
         .log-table td {
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            padding: 12px 8px;
+            border-bottom: 1px solid #141824;
+            padding: 10px 6px;
             text-align: right;
-            color: #cbd5e1;
+            color: #e2e8f0;
         }
 
         .delete-btn {
             background: none;
             border: none;
-            color: #f43f5e;
+            color: #ef4444;
             cursor: pointer;
             padding: 0;
             width: auto;
             font-size: 1.1rem;
             box-shadow: none;
             margin: 0;
-            transition: transform 0.2s;
         }
 
-        .delete-btn:hover {
-            transform: scale(1.2);
-            color: #fb7185;
-            box-shadow: none;
+        /* סיכום קלוריות יומי */
+        .macro-bar {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .macro-pill {
+            flex: 1;
+            background: #05070a;
+            border: 1px solid var(--card-border);
+            border-radius: 10px;
+            padding: 12px;
+            text-align: center;
+        }
+
+        .macro-num {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: var(--accent-cyan);
         }
     </style>
 </head>
@@ -278,29 +352,45 @@
 
 <div class="container">
 
-    <!-- עדכון משקל נוכחי -->
+    <!-- 1. משקל גוף נוכחי וסרגל התקדמות חי באחוזים -->
     <div class="card">
-        <h2>⚡ משקל גוף נוכחי</h2>
+        <h2>⚖️ משקל גוף נוכחי ומעקב Recomp</h2>
         <div style="display: flex; gap: 14px; align-items: flex-end;">
             <div style="flex: 1;">
-                <label for="currentWeight">משקל עדכני (ק"ג):</label>
+                <label for="currentWeight">משקל גוף עדכני (ק"ג):</label>
                 <input type="number" id="currentWeight" step="0.1" placeholder="115">
             </div>
             <div style="flex: 1;">
-                <button onclick="updateWeight()">שמור משקל</button>
+                <button onclick="updateWeight()">שמור וחשב מחדש</button>
+            </div>
+        </div>
+
+        <div class="progress-wrapper">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-weight: 600;">התקדמות ליעד הסופי (75 ק"ג):</span>
+                <span id="progressPercentText" style="font-weight: 800; color: var(--accent-pink); font-size: 1.1rem;">0%</span>
+            </div>
+            <div class="progress-bar-bg">
+                <div id="progressBarFill" class="progress-bar-fill"></div>
+            </div>
+            <div class="progress-labels">
+                <span>התחלה: 115 ק"ג</span>
+                <span id="lostKgText">ירדו: 0 ק"ג</span>
+                <span>יעד: 75 ק"ג</span>
             </div>
         </div>
     </div>
 
-    <!-- סולם התגמולים המאושר -->
+    <!-- 2. סולם התגמולים האינטראקטיבי עם Countdown -->
     <div class="card">
-        <h2>🎯 סולם התגמולים והיעדים</h2>
+        <h2>🎯 סולם התגמולים והיעדים (Interactive Countdown)</h2>
+        <div id="celebrationBanner" class="celebration-banner"></div>
         <div id="milestonesContainer"></div>
     </div>
 
-    <!-- מעקב כוח דינמי לפי אימון -->
+    <!-- 3. מעקב אימוני כוח דינמי (כולל מכונת מתח עם עזרה) -->
     <div class="card">
-        <h2>🏋️‍♀️ תיעוד אימון כוח דינמי</h2>
+        <h2>🏋️‍♀️ מעקב אימוני כוח</h2>
         <div class="grid-2">
             <div>
                 <label for="liftDate">תאריך:</label>
@@ -308,15 +398,16 @@
             </div>
             <div>
                 <label for="liftExercise">תרגיל:</label>
-                <select id="liftExercise" onchange="renderChartAndRatios()">
+                <select id="liftExercise" onchange="handleExerciseChange()">
                     <option value="Squat">סקוואט (Squat)</option>
                     <option value="Bench Press">לחיצת חזה (Bench Press)</option>
                     <option value="Deadlift">דדליפט (Deadlift)</option>
                     <option value="Overhead Press">פרס (OHP)</option>
+                    <option value="Assisted Pull-up">מתח עם עזרה (Assisted Pull-up)</option>
                 </select>
             </div>
             <div>
-                <label for="liftWeight">משקל שהורם (ק"ג):</label>
+                <label id="liftWeightLabel" for="liftWeight">משקל שהורם (ק"ג):</label>
                 <input type="number" id="liftWeight" step="0.5" placeholder="80">
             </div>
             <div>
@@ -324,33 +415,81 @@
                 <input type="number" id="liftReps" min="1" placeholder="5">
             </div>
         </div>
-        <button onclick="logLift()">הוסף אימון למעקב</button>
-    </div>
+        <button onclick="logLift()">תעד אימון</button>
 
-    <!-- גרף התקדמות ויחס חוזק למשקל גוף -->
-    <div class="card">
-        <h2>📊 יחס כוח למסת גוף וגרף ביצועים</h2>
-        <div class="ratio-grid" id="ratioSummary"></div>
-        <div style="margin-top: 24px; position: relative; height: 320px;">
+        <div style="margin-top: 20px;">
+            <h3 style="font-size: 1rem; color: var(--text-muted); margin-bottom: 8px;">יחס כוח למסת גוף (שיא 1RM / משקל גוף):</h3>
+            <div class="ratio-grid" id="ratioSummary"></div>
+        </div>
+
+        <div style="margin-top: 24px; position: relative; height: 300px;">
             <canvas id="strengthChart"></canvas>
         </div>
-    </div>
 
-    <!-- היסטוריית רישומים -->
-    <div class="card">
-        <h2>📜 היסטוריית אימונים</h2>
         <table class="log-table">
             <thead>
                 <tr>
                     <th>תאריך</th>
                     <th>תרגיל</th>
-                    <th>משקל</th>
+                    <th>משקל/עזרה</th>
                     <th>חזרות</th>
-                    <th>1RM משוער</th>
+                    <th>מדד ביצוע</th>
                     <th></th>
                 </tr>
             </thead>
-            <tbody id="logsTableBody"></tbody>
+            <tbody id="strengthLogsTable"></tbody>
+        </table>
+    </div>
+
+    <!-- 4. שגרת מתיחות ועבודה על גמישות יומית -->
+    <div class="card">
+        <h2>🧘‍♀️ שגרת גמישות ומתיחות יומית</h2>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: -8px;">הכנה לתנועתיות, יוגה ערסלים, עמידות ידיים וקלילות מפרקים:</p>
+        <div id="stretchesContainer"></div>
+        <button onclick="resetDailyStretches()" style="background: #1e2433; box-shadow: none; font-size: 0.85rem; padding: 8px;">איפוס שגרה יומית</button>
+    </div>
+
+    <!-- 5. מחשבון קלוריות ולוג ארוחות יומי (חזר במלואו!) -->
+    <div class="card">
+        <h2>🥗 מחשבון קלוריות ולוג ארוחות יומי</h2>
+        
+        <div class="macro-bar">
+            <div class="macro-pill">
+                <div class="ratio-title">סה"כ קלוריות היום</div>
+                <div class="macro-num" id="totalCaloriesToday">0</div>
+            </div>
+            <div class="macro-pill">
+                <div class="ratio-title">סה"כ חלבון היום</div>
+                <div class="macro-num" id="totalProteinToday" style="color: var(--accent-pink);">0g</div>
+            </div>
+        </div>
+
+        <div class="grid-3">
+            <div>
+                <label for="mealName">שם הארוחה / פריט:</label>
+                <input type="text" id="mealName" placeholder="למשל: שיבולת שועל + חלבון">
+            </div>
+            <div>
+                <label for="mealCalories">קלוריות (kcal):</label>
+                <input type="number" id="mealCalories" placeholder="450">
+            </div>
+            <div>
+                <label for="mealProtein">חלבון (גרם):</label>
+                <input type="number" id="mealProtein" placeholder="35">
+            </div>
+        </div>
+        <button onclick="logMeal()">הוסף ארוחה ליומן</button>
+
+        <table class="log-table">
+            <thead>
+                <tr>
+                    <th>פריט</th>
+                    <th>קלוריות</th>
+                    <th>חלבון</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody id="mealsTableBody"></tbody>
         </table>
     </div>
 
@@ -367,21 +506,76 @@
         { target: 75, title: "סדנת אקרובטיקה ועמידות ידיים", desc: "שליטה מלאה במשקל הגוף על מזרן" }
     ];
 
+    // תרגילי גמישות ומתיחות יומיים
+    const defaultStretches = [
+        "מתיחת ירך אחורית וזוקפי גב (פתיחה לקרח ולדדליפט) - 60 שניות",
+        "פתיחת כתפיים וחזה כנגד קיר/מקל (הכנה לערסלים ומתח) - 60 שניות",
+        "מתיחת מקרבי ירך ופיסוק (Butterfly / Frog) - 90 שניות",
+        "עבודה על שורש כף היד וגמישות אמות (הכנה לעמידות ידיים) - 60 שניות",
+        "תלייה פסיבית על מתח לשחרור עמוד שדרה - 30 שניות x 2"
+    ];
+
+    // נתונים מקומיים
     let currentWeight = parseFloat(localStorage.getItem('user_weight')) || 115;
     let strengthLogs = JSON.parse(localStorage.getItem('strength_logs')) || [];
+    let mealsLogs = JSON.parse(localStorage.getItem('meals_logs')) || [];
+    let dailyStretches = JSON.parse(localStorage.getItem('daily_stretches')) || {};
     let chartInstance = null;
 
     document.getElementById('currentWeight').value = currentWeight;
     document.getElementById('liftDate').valueAsDate = new Date();
 
+    // 1. עדכון משקל וסרגל אחוזים
     function updateWeight() {
         const val = parseFloat(document.getElementById('currentWeight').value);
         if (val && val > 0) {
+            const oldWeight = currentWeight;
             currentWeight = val;
             localStorage.setItem('user_weight', currentWeight);
+
+            // בדיקת השגת יעד חדש והפעלת חגיגה
+            checkCelebration(oldWeight, currentWeight);
+
+            renderProgress();
             renderMilestones();
             renderChartAndRatios();
         }
+    }
+
+    function renderProgress() {
+        const start = 115;
+        const goal = 75;
+        const lost = Math.max(0, start - currentWeight);
+        const totalToLose = start - goal;
+        const pct = Math.min(100, Math.max(0, (lost / totalToLose) * 100));
+
+        document.getElementById('progressBarFill').style.width = `${pct}%`;
+        document.getElementById('progressPercentText').innerText = `${pct.toFixed(1)}%`;
+        document.getElementById('lostKgText').innerText = `ירדו: ${lost.toFixed(1)} ק"ג`;
+    }
+
+    // 2. Countdown לתגמולים וחגיגת יעדים
+    function checkCelebration(oldW, newW) {
+        milestones.forEach(m => {
+            if (oldW > m.target && newW <= m.target) {
+                triggerCelebration(m);
+            }
+        });
+    }
+
+    function triggerCelebration(milestone) {
+        // קונפטי צבעוני
+        if (typeof confetti === 'function') {
+            confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 } });
+        }
+        const banner = document.getElementById('celebrationBanner');
+        banner.style.display = 'block';
+        banner.innerHTML = `
+            <h3 style="margin:0; color: #fff; font-size: 1.3rem;">🎉 מדהים! שברת את יעד ה-${milestone.target} ק"ג!</h3>
+            <p style="margin: 6px 0 0 0; color: #f8fafc; font-size: 1rem;">
+                נפתח רשמית התגמול: <strong>${milestone.title}</strong>! זה הזמן לקבוע ולחגוג את זה בענק!
+            </p>
+        `;
     }
 
     function renderMilestones() {
@@ -389,7 +583,9 @@
         container.innerHTML = '';
 
         milestones.forEach(m => {
+            const diff = (currentWeight - m.target).toFixed(1);
             const isUnlocked = currentWeight <= m.target;
+
             const div = document.createElement('div');
             div.className = `milestone-item ${isUnlocked ? 'unlocked' : ''}`;
             div.innerHTML = `
@@ -397,10 +593,28 @@
                     <strong>${m.title}</strong>
                     <span>${m.desc}</span>
                 </div>
-                <div class="badge">${isUnlocked ? 'הושג! 🎯' : `${m.target} ק"ג`}</div>
+                <div class="countdown-badge ${isUnlocked ? 'done' : 'pending'}">
+                    ${isUnlocked ? 'הושג! פתוח לביצוע 🌟' : `עוד ${diff} ק"ג ליעד (${m.target} ק"ג)`}
+                </div>
             `;
             container.appendChild(div);
         });
+    }
+
+    // 3. אימוני כוח ומכונת מתח עם עזרה
+    function handleExerciseChange() {
+        const ex = document.getElementById('liftExercise').value;
+        const label = document.getElementById('liftWeightLabel');
+        const input = document.getElementById('liftWeight');
+
+        if (ex === "Assisted Pull-up") {
+            label.innerText = "משקל עזרה במכונה (קילוגרמים שמקלים עלייך):";
+            input.placeholder = "למשל: 35 (המטרה להגיע ל-0)";
+        } else {
+            label.innerText = "משקל שהורם (ק"ג):";
+            input.placeholder = "80";
+        }
+        renderChartAndRatios();
     }
 
     function calculate1RM(weight, reps) {
@@ -414,14 +628,19 @@
         const weight = parseFloat(document.getElementById('liftWeight').value);
         const reps = parseInt(document.getElementById('liftReps').value, 10);
 
-        if (!date || isNaN(weight) || isNaN(reps) || weight <= 0 || reps <= 0) {
-            alert('נא למלא את כל שדות האימון בצורה תקינה.');
+        if (!date || isNaN(weight) || isNaN(reps) || weight < 0 || reps <= 0) {
+            alert('נא להזין ערכים תקינים.');
             return;
         }
 
-        const estimated1RM = calculate1RM(weight, reps);
-        const newEntry = { id: Date.now(), date, exercise, weight, reps, estimated1RM };
+        let metric;
+        if (exercise === "Assisted Pull-up") {
+            metric = weight; // משקל העזרה
+        } else {
+            metric = calculate1RM(weight, reps);
+        }
 
+        const newEntry = { id: Date.now(), date, exercise, weight, reps, metric };
         strengthLogs.push(newEntry);
         strengthLogs.sort((a, b) => new Date(a.date) - new Date(b.date));
         localStorage.setItem('strength_logs', JSON.stringify(strengthLogs));
@@ -429,31 +648,33 @@
         document.getElementById('liftWeight').value = '';
         document.getElementById('liftReps').value = '';
 
-        renderLogsTable();
+        renderStrengthLogs();
         renderChartAndRatios();
     }
 
-    function deleteLog(id) {
+    function deleteLift(id) {
         strengthLogs = strengthLogs.filter(l => l.id !== id);
         localStorage.setItem('strength_logs', JSON.stringify(strengthLogs));
-        renderLogsTable();
+        renderStrengthLogs();
         renderChartAndRatios();
     }
 
-    function renderLogsTable() {
-        const tbody = document.getElementById('logsTableBody');
+    function renderStrengthLogs() {
+        const tbody = document.getElementById('strengthLogsTable');
         tbody.innerHTML = '';
 
-        const reversed = [...strengthLogs].reverse();
-        reversed.forEach(log => {
+        [...strengthLogs].reverse().forEach(log => {
             const row = document.createElement('tr');
+            const isPullup = log.exercise === "Assisted Pull-up";
             row.innerHTML = `
                 <td>${log.date}</td>
                 <td>${log.exercise}</td>
-                <td>${log.weight} ק"ג</td>
+                <td>${log.weight} ק"ג ${isPullup ? 'עזרה' : ''}</td>
                 <td>${log.reps}</td>
-                <td><strong style="color: var(--accent-cyan);">${log.estimated1RM} ק"ג</strong></td>
-                <td><button class="delete-btn" onclick="deleteLog(${log.id})">✕</button></td>
+                <td style="color: ${isPullup ? 'var(--accent-orange)' : 'var(--accent-cyan)'}">
+                    <strong>${isPullup ? `${log.weight} ק"ג עזרה` : `${log.metric} ק"ג 1RM`}</strong>
+                </td>
+                <td><button class="delete-btn" onclick="deleteLift(${log.id})">✕</button></td>
             `;
             tbody.appendChild(row);
         });
@@ -461,104 +682,166 @@
 
     function renderChartAndRatios() {
         const currentExercise = document.getElementById('liftExercise').value;
+        const isPullup = currentExercise === "Assisted Pull-up";
         const filteredLogs = strengthLogs.filter(l => l.exercise === currentExercise);
 
-        const exercises = ["Squat", "Bench Press", "Deadlift", "Overhead Press"];
+        // יחס כוח 
+        const exercises = ["Squat", "Bench Press", "Deadlift", "Overhead Press", "Assisted Pull-up"];
         const ratioContainer = document.getElementById('ratioSummary');
         ratioContainer.innerHTML = '';
 
         exercises.forEach(ex => {
             const exLogs = strengthLogs.filter(l => l.exercise === ex);
-            let max1RM = 0;
-            if (exLogs.length > 0) {
-                max1RM = Math.max(...exLogs.map(l => l.estimated1RM));
-            }
-            const ratio = (currentWeight > 0 && max1RM > 0) ? (max1RM / currentWeight).toFixed(2) : '-';
-            
             const card = document.createElement('div');
             card.className = 'ratio-card';
-            card.innerHTML = `
-                <div class="ratio-title">${ex}</div>
-                <div class="ratio-value">${ratio !== '-' ? `x${ratio}` : '-'}</div>
-                <div class="ratio-sub">${max1RM ? `${max1RM} ק"ג שיא` : 'אין נתונים'}</div>
-            `;
+
+            if (ex === "Assisted Pull-up") {
+                let minHelp = exLogs.length > 0 ? Math.min(...exLogs.map(l => l.weight)) : null;
+                card.innerHTML = `
+                    <div class="ratio-title">מתח עם עזרה</div>
+                    <div class="ratio-value">${minHelp !== null ? `${minHelp} ק"ג` : '-'}</div>
+                    <div style="font-size: 0.7rem; color: var(--text-muted);">${minHelp !== null ? (minHelp === 0 ? 'מתח עצמאי!' : 'העזרה הנמוכה ביותר') : 'טרם תועד'}</div>
+                `;
+            } else {
+                let max1RM = exLogs.length > 0 ? Math.max(...exLogs.map(l => l.metric)) : 0;
+                const ratio = (currentWeight > 0 && max1RM > 0) ? (max1RM / currentWeight).toFixed(2) : '-';
+                card.innerHTML = `
+                    <div class="ratio-title">${ex}</div>
+                    <div class="ratio-value">${ratio !== '-' ? `x${ratio}` : '-'}</div>
+                    <div style="font-size: 0.7rem; color: var(--text-muted);">${max1RM ? `${max1RM} ק"ג שיא` : 'טרם תועד'}</div>
+                `;
+            }
             ratioContainer.appendChild(card);
         });
 
+        // עדכון גרף
         const ctx = document.getElementById('strengthChart').getContext('2d');
         const labels = filteredLogs.map(l => l.date);
-        const data1RM = filteredLogs.map(l => l.estimated1RM);
-        const dataWeight = filteredLogs.map(l => l.weight);
+        const dataValues = filteredLogs.map(l => isPullup ? l.weight : l.metric);
 
         if (chartInstance) {
             chartInstance.destroy();
         }
 
-        // יצירת גרדיאנט זוהר לקו ה-1RM בגרף
-        const gradient = ctx.createLinearGradient(0, 0, 0, 300);
-        gradient.addColorStop(0, 'rgba(139, 92, 246, 0.45)');
-        gradient.addColorStop(1, 'rgba(139, 92, 246, 0.0)');
-
         chartInstance = new Chart(ctx, {
             type: 'line',
             data: {
                 labels: labels,
-                datasets: [
-                    {
-                        label: `1RM משוער (${currentExercise})`,
-                        data: data1RM,
-                        borderColor: '#a855f7',
-                        backgroundColor: gradient,
-                        borderWidth: 3,
-                        pointBackgroundColor: '#ec4899',
-                        pointBorderColor: '#fff',
-                        pointRadius: 5,
-                        pointHoverRadius: 7,
-                        tension: 0.3,
-                        fill: true
-                    },
-                    {
-                        label: `משקל עבודה בפועל`,
-                        data: dataWeight,
-                        borderColor: '#38bdf8',
-                        borderDash: [5, 5],
-                        borderWidth: 2,
-                        pointRadius: 3,
-                        tension: 0.3,
-                        fill: false
-                    }
-                ]
+                datasets: [{
+                    label: isPullup ? 'משקל עזרה במכונה (המטרה: ירידה ל-0)' : `1RM משוער (${currentExercise})`,
+                    data: dataValues,
+                    borderColor: isPullup ? '#f59e0b' : '#a855f7',
+                    backgroundColor: isPullup ? 'rgba(245, 158, 11, 0.1)' : 'rgba(168, 85, 247, 0.1)',
+                    tension: 0.25,
+                    fill: true,
+                    pointBackgroundColor: isPullup ? '#f59e0b' : '#ec4899',
+                    pointRadius: 5
+                }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
-                    legend: {
-                        labels: {
-                            color: '#94a3b8',
-                            font: { family: 'system-ui', size: 12 }
-                        }
-                    }
+                    legend: { labels: { color: '#94a3b8' } }
                 },
                 scales: {
-                    x: {
-                        grid: { color: 'rgba(255, 255, 255, 0.05)' },
-                        ticks: { color: '#64748b' }
-                    },
-                    y: {
-                        title: { display: true, text: 'משקל (ק"ג)', color: '#94a3b8' },
-                        grid: { color: 'rgba(255, 255, 255, 0.05)' },
-                        ticks: { color: '#64748b' },
-                        beginAtZero: false
+                    x: { ticks: { color: '#64748b' }, grid: { color: '#1e2433' } },
+                    y: { 
+                        ticks: { color: '#64748b' }, 
+                        grid: { color: '#1e2433' },
+                        title: { display: true, text: isPullup ? 'עזרה (ק"ג)' : 'משקל 1RM (ק"ג)', color: '#94a3b8' }
                     }
                 }
             }
         });
     }
 
+    // 4. שגרת מתיחות וגמישות
+    function renderStretches() {
+        const container = document.getElementById('stretchesContainer');
+        container.innerHTML = '';
+        defaultStretches.forEach((stretch, idx) => {
+            const checked = dailyStretches[idx] ? 'checked' : '';
+            const div = document.createElement('div');
+            div.className = 'stretch-item';
+            div.innerHTML = `
+                <span style="font-size: 0.9rem;">${stretch}</span>
+                <input type="checkbox" onchange="toggleStretch(${idx})" ${checked}>
+            `;
+            container.appendChild(div);
+        });
+    }
+
+    function toggleStretch(idx) {
+        dailyStretches[idx] = !dailyStretches[idx];
+        localStorage.setItem('daily_stretches', JSON.stringify(dailyStretches));
+    }
+
+    function resetDailyStretches() {
+        dailyStretches = {};
+        localStorage.setItem('daily_stretches', JSON.stringify(dailyStretches));
+        renderStretches();
+    }
+
+    // 5. מחשבון קלוריות ולוג ארוחות
+    function logMeal() {
+        const name = document.getElementById('mealName').value.trim();
+        const cals = parseInt(document.getElementById('mealCalories').value, 10);
+        const protein = parseInt(document.getElementById('mealProtein').value, 10) || 0;
+
+        if (!name || isNaN(cals) || cals <= 0) {
+            alert('נא להזין שם ארוחה ומספר קלוריות.');
+            return;
+        }
+
+        mealsLogs.push({ id: Date.now(), name, cals, protein });
+        localStorage.setItem('meals_logs', JSON.stringify(mealsLogs));
+
+        document.getElementById('mealName').value = '';
+        document.getElementById('mealCalories').value = '';
+        document.getElementById('mealProtein').value = '';
+
+        renderMeals();
+    }
+
+    function deleteMeal(id) {
+        mealsLogs = mealsLogs.filter(m => m.id !== id);
+        localStorage.setItem('meals_logs', JSON.stringify(mealsLogs));
+        renderMeals();
+    }
+
+    function renderMeals() {
+        const tbody = document.getElementById('mealsTableBody');
+        tbody.innerHTML = '';
+
+        let totalCal = 0;
+        let totalProt = 0;
+
+        mealsLogs.forEach(meal => {
+            totalCal += meal.cals;
+            totalProt += meal.protein;
+
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${meal.name}</td>
+                <td>${meal.cals} kcal</td>
+                <td>${meal.protein} גרם</td>
+                <td><button class="delete-btn" onclick="deleteMeal(${meal.id})">✕</button></td>
+            `;
+            tbody.appendChild(row);
+        });
+
+        document.getElementById('totalCaloriesToday').innerText = totalCal;
+        document.getElementById('totalProteinToday').innerText = `${totalProt}g`;
+    }
+
+    // אתחול דף
+    renderProgress();
     renderMilestones();
-    renderLogsTable();
+    renderStrengthLogs();
     renderChartAndRatios();
+    renderStretches();
+    renderMeals();
 </script>
 
 </body>
